@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas — Capital Allocation Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --aramco-green: #00843D;
+    --aramco-green-dark: #006030;
+    --aramco-green-darker: #003D1F;
+    --aramco-green-50: #E8F3EC;
+    --aramco-green-100: #C9E3D2;
+    --aramco-green-200: #92C6A5;
+    --ink-900: #0A1A14;
+    --ink-700: #2A3B33;
+    --ink-500: #5A6B63;
+    --ink-400: #8A968F;
+    --ink-300: #B5BDB8;
+    --ink-200: #D8DDD9;
+    --ink-100: #EEF1EF;
+    --ink-50:  #F7F8F7;
+    --paper:   #FAFBFA;
+    --white:   #FFFFFF;
+    --gold:    #C9A24B;
+    --gold-soft: #E6CC8A;
+    --warn:    #B5651D;
+    --warn-bg: #FBF1E0;
+    --error:   #A0331E;
+    --error-bg: #FAE5DF;
+    --success: #00843D;
+    --info:    #1F4A6B;
+    --stale:   #7A7264;
+    --stale-bg: #EFEBE3;
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+
+    --shadow-sm: 0 1px 2px rgba(10,26,20,0.04), 0 0 0 1px rgba(10,26,20,0.04);
+    --shadow-md: 0 4px 12px rgba(10,26,20,0.06), 0 0 0 1px rgba(10,26,20,0.05);
+    --shadow-lg: 0 12px 32px rgba(10,26,20,0.10), 0 0 0 1px rgba(10,26,20,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: var(--font-sans);
+    color: var(--ink-900);
+    background: var(--paper);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, select { font-family: inherit; font-size: inherit; }
+
+  .mono { font-family: var(--font-mono); font-feature-settings: "tnum" 1; }
+  .num  { font-family: var(--font-mono); font-feature-settings: "tnum" 1; letter-spacing: -0.01em; }
+  .display { font-family: var(--font-display); letter-spacing: -0.01em; }
+
+  /* ============= APP SHELL ============= */
+  .app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: 64px 1fr;
+    grid-template-areas:
+      "brand topbar"
+      "nav   main";
+    min-height: 100vh;
+    background: var(--white);
+  }
+
+  .brand {
+    grid-area: brand;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-right: 1px solid var(--ink-100);
+    border-bottom: 1px solid var(--ink-100);
+    gap: 10px;
+    background: var(--white);
+  }
+  .brand-logo {
+    width: 28px; height: 28px;
+    background: var(--aramco-green);
+    border-radius: 6px;
+    display: grid; place-items: center;
+    color: white;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+  }
+  .brand-name {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  .brand-sub {
+    font-size: 9px;
+    color: var(--ink-500);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 1px;
+  }
+
+  .topbar {
+    grid-area: topbar;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--ink-100);
+    background: var(--white);
+    gap: 24px;
+  }
+  .breadcrumb {
+    font-size: 12px;
+    color: var(--ink-500);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .breadcrumb b { color: var(--ink-900); font-weight: 500; }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .role-switch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 4px;
+    border: 1px solid var(--ink-200);
+    border-radius: 20px;
+    font-size: 12px;
+    background: var(--ink-50);
+    cursor: pointer;
+  }
+  .role-switch select {
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    padding-right: 8px;
+  }
+  .role-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--aramco-green-dark);
+    color: white;
+    display: grid; place-items: center;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .freshness {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--ink-500);
+    font-family: var(--font-mono);
+  }
+  .freshness-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ============= NAV ============= */
+  .nav {
+    grid-area: nav;
+    background: var(--white);
+    border-right: 1px solid var(--ink-100);
+    padding: 16px 0;
+    overflow-y: auto;
+  }
+  .nav-group { padding: 0 12px; margin-bottom: 18px; }
+  .nav-group-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-400);
+    padding: 0 12px 6px;
+    font-weight: 600;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--ink-700);
+    cursor: pointer;
+    margin-bottom: 1px;
+    transition: background 120ms;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--ink-50); }
+  .nav-item.active {
+    background: var(--aramco-green-50);
+    color: var(--aramco-green-dark);
+    font-weight: 500;
+  }
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 8px; bottom: 8px;
+    width: 3px;
+    background: var(--aramco-green);
+    border-radius: 0 2px 2px 0;
+  }
+  .nav-icon {
+    width: 16px; height: 16px;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+  .nav-badge {
+    margin-left: auto;
+    font-size: 10px;
+    background: var(--aramco-green);
+    color: white;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  .nav-badge.warn { background: var(--warn); }
+
+  /* ============= MAIN ============= */
+  .main {
+    grid-area: main;
+    overflow-y: auto;
+    background: var(--paper);
+  }
+
+  .view { display: none; padding: 28px 36px 60px; max-width: 1600px; margin: 0 auto; }
+  .view.active { display: block; animation: fadeIn 260ms ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ============= TYPOGRAPHY ============= */
+  .page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--ink-100);
+  }
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .page-subtitle {
+    font-size: 13px;
+    color: var(--ink-500);
+    margin-top: 6px;
+  }
+  .page-actions { display: flex; gap: 8px; align-items: center; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 120ms;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--aramco-green);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--aramco-green-dark); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-700);
+    border-color: var(--ink-200);
+  }
+  .btn-ghost:hover { background: var(--ink-50); }
+  .btn-gold {
+    background: var(--white);
+    color: var(--gold);
+    border: 1px solid var(--gold-soft);
+  }
+  .btn-gold:hover { background: #FDF8EC; }
+
+  /* ============= KPI STRIP ============= */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--ink-100);
+    border: 1px solid var(--ink-100);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .kpi {
+    background: var(--white);
+    padding: 18px 22px;
+    position: relative;
+  }
+  .kpi-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-500);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink-900);
+  }
+  .kpi-value .unit { font-size: 16px; color: var(--ink-500); font-family: var(--font-sans); margin-left: 2px; }
+  .kpi-delta {
+    margin-top: 6px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .kpi-delta.up { color: var(--aramco-green); }
+  .kpi-delta.down { color: var(--error); }
+  .kpi-spark { position: absolute; right: 16px; bottom: 16px; opacity: 0.5; }
+
+  /* ============= CARDS ============= */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--ink-100);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .card-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--ink-100);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-900);
+  }
+  .card-subtitle {
+    font-size: 11px;
+    color: var(--ink-500);
+    margin-top: 2px;
+  }
+  .card-body { padding: 20px; }
+  .card-body.flush { padding: 0; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-23 { grid-template-columns: 2fr 1fr; }
+
+  /* ============= TABLES ============= */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .data-table th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-500);
+    font-weight: 600;
+    background: var(--ink-50);
+    border-bottom: 1px solid var(--ink-100);
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--ink-100);
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover { background: var(--ink-50); }
+  .data-table .num { text-align: right; }
+  .data-table .id { color: var(--ink-500); font-size: 11px; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .chip-green { background: var(--aramco-green-50); color: var(--aramco-green-dark); }
+  .chip-gold { background: #FDF4E0; color: var(--gold); }
+  .chip-warn { background: var(--warn-bg); color: var(--warn); }
+  .chip-error { background: var(--error-bg); color: var(--error); }
+  .chip-stale { background: var(--stale-bg); color: var(--stale); }
+  .chip-info { background: #E5EEF5; color: var(--info); }
+
+  /* ============= DASHBOARD SPECIFIC ============= */
+  .donut-card { display: flex; gap: 24px; align-items: center; }
+  .donut-legend { flex: 1; font-size: 12px; }
+  .donut-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--ink-100);
+  }
+  .donut-legend-row:last-child { border-bottom: none; }
+  .donut-legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .donut-legend-label { flex: 1; }
+  .donut-legend-val { font-family: var(--font-mono); color: var(--ink-700); font-weight: 500; }
+
+  /* ============= ALERTS ============= */
+  .alert {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid;
+    margin-bottom: 8px;
+  }
+  .alert-warn { background: var(--warn-bg); border-color: #E8C99A; color: var(--warn); }
+  .alert-info { background: #EFF4F8; border-color: #C5D5E0; color: var(--info); }
+  .alert-icon { font-size: 14px; flex-shrink: 0; }
+  .alert-body { flex: 1; }
+  .alert-body strong { display: block; margin-bottom: 2px; font-weight: 600; color: var(--ink-900); }
+  .alert-body span { color: var(--ink-700); }
+
+  /* ============= OPTIMIZER ============= */
+  .opt-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+  }
+  .opt-config { display: flex; flex-direction: column; gap: 16px; }
+  .control-group {
+    padding: 14px 16px;
+    border: 1px solid var(--ink-100);
+    border-radius: 8px;
+    background: var(--white);
+  }
+  .control-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-500);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .slider-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .slider-row .label { color: var(--ink-700); }
+  .slider-row .val { font-family: var(--font-mono); font-weight: 600; color: var(--ink-900); }
+  input[type="range"] {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ink-100);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--aramco-green);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(0,132,61,0.15);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--aramco-green);
+    cursor: pointer;
+    border: none;
+  }
+
+  .radio-stack { display: flex; flex-direction: column; gap: 6px; }
+  .radio-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--ink-100);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 120ms;
+  }
+  .radio-opt:hover { border-color: var(--ink-300); }
+  .radio-opt.selected {
+    border-color: var(--aramco-green);
+    background: var(--aramco-green-50);
+  }
+  .radio-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink-300);
+    flex-shrink: 0;
+  }
+  .radio-opt.selected .radio-dot {
+    border-color: var(--aramco-green);
+    background: radial-gradient(circle, var(--aramco-green) 0% 35%, white 35% 100%);
+  }
+
+  /* ============= OPTIMIZER STAGE ============= */
+  .opt-stage {
+    background: linear-gradient(180deg, var(--white) 0%, #FAFCFA 100%);
+    border: 1px solid var(--ink-100);
+    border-radius: 10px;
+    padding: 24px;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+  }
+  .opt-stage-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .opt-stage-sub {
+    font-size: 12px;
+    color: var(--ink-500);
+    margin-bottom: 20px;
+  }
+
+  .stages {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .stage {
+    flex: 1;
+    padding: 10px 8px;
+    text-align: center;
+    border-top: 2px solid var(--ink-200);
+    position: relative;
+    color: var(--ink-400);
+    font-size: 11px;
+    transition: all 220ms;
+  }
+  .stage-num {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--ink-100);
+    color: var(--ink-500);
+    line-height: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: -11px;
+    background-color: white;
+    border: 2px solid var(--ink-200);
+    margin-bottom: 4px;
+  }
+  .stage-label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .stage.active { color: var(--aramco-green-dark); border-top-color: var(--aramco-green); }
+  .stage.active .stage-num { background: var(--aramco-green); color: white; border-color: var(--aramco-green); }
+  .stage.done { color: var(--aramco-green); border-top-color: var(--aramco-green); }
+  .stage.done .stage-num { background: var(--aramco-green); color: white; border-color: var(--aramco-green); }
+  .stage.done .stage-num::after { content: '✓'; }
+  .stage.done .stage-num span { display: none; }
+
+  .opt-viz {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .opt-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--ink-50);
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+  }
+  .opt-spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--ink-200);
+    border-top-color: var(--aramco-green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .opt-status-text { flex: 1; color: var(--ink-700); }
+  .opt-status-meta { color: var(--ink-500); font-size: 11px; }
+
+  .pareto-chart {
+    width: 100%;
+    height: 280px;
+    background: var(--white);
+    border-radius: 6px;
+    position: relative;
+  }
+  .pareto-axis {
+    stroke: var(--ink-200);
+    stroke-width: 1;
+  }
+  .pareto-grid {
+    stroke: var(--ink-100);
+    stroke-width: 1;
+    stroke-dasharray: 2 4;
+  }
+  .pareto-dot {
+    transition: all 300ms;
+    cursor: pointer;
+  }
+  .pareto-dot:hover { transform: scale(1.4); }
+
+  .opt-results-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .result-tile {
+    padding: 14px 16px;
+    border: 1px solid var(--ink-100);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 180ms;
+    position: relative;
+  }
+  .result-tile.selected {
+    border-color: var(--aramco-green);
+    background: var(--aramco-green-50);
+  }
+  .result-tile-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-500);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .result-tile-name {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .result-tile-metric {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  .result-tile-metric .label { color: var(--ink-500); }
+  .result-tile-metric .val { font-family: var(--font-mono); font-weight: 600; }
+
+  /* ============= AGENT QUEUES ============= */
+  .agent-card {
+    background: var(--white);
+    border: 1px solid var(--ink-100);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 200ms;
+    cursor: pointer;
+    position: relative;
+  }
+  .agent-card:hover {
+    border-color: var(--aramco-green-100);
+    box-shadow: var(--shadow-md);
+  }
+  .agent-card.escalated::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 14px; bottom: 14px;
+    width: 3px;
+    background: var(--warn);
+    border-radius: 0 2px 2px 0;
+  }
+  .agent-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .agent-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-900);
+    margin-bottom: 4px;
+  }
+  .agent-meta {
+    font-size: 11px;
+    color: var(--ink-500);
+    font-family: var(--font-mono);
+  }
+  .agent-confidence {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+  }
+  .confidence-bar {
+    width: 50px;
+    height: 4px;
+    background: var(--ink-100);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .confidence-fill {
+    height: 100%;
+    background: var(--aramco-green);
+    border-radius: 2px;
+  }
+  .reasoning {
+    font-size: 12px;
+    color: var(--ink-700);
+    line-height: 1.55;
+    padding: 10px 12px;
+    background: var(--ink-50);
+    border-radius: 6px;
+    border-left: 2px solid var(--aramco-green-200);
+  }
+  .reasoning-cite {
+    color: var(--aramco-green-dark);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-decoration: underline;
+    text-decoration-color: var(--aramco-green-100);
+  }
+  .agent-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .btn-mini {
+    padding: 5px 10px;
+    font-size: 11px;
+    border-radius: 5px;
+    font-weight: 500;
+  }
+  .btn-accept { background: var(--aramco-green); color: white; }
+  .btn-modify { background: var(--white); color: var(--ink-700); border: 1px solid var(--ink-200); }
+  .btn-reject { background: var(--white); color: var(--error); border: 1px solid #E8C8C0; }
+  .sla-timer {
+    margin-left: auto;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--ink-500);
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--ink-50);
+  }
+  .sla-timer.warn { background: var(--warn-bg); color: var(--warn); }
+
+  /* ============= PLANNER HOME ============= */
+  .scenario-card {
+    background: var(--white);
+    border: 1px solid var(--ink-100);
+    border-radius: 10px;
+    padding: 18px 20px;
+    transition: all 180ms;
+    cursor: pointer;
+  }
+  .scenario-card:hover {
+    border-color: var(--aramco-green-100);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .scenario-name {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .scenario-desc {
+    font-size: 12px;
+    color: var(--ink-500);
+    margin-bottom: 14px;
+  }
+  .scenario-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--ink-100);
+  }
+  .scenario-metric .lbl {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-500);
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .scenario-metric .vl {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* ============= AUDIT LOG ============= */
+  .audit-row {
+    display: grid;
+    grid-template-columns: 80px 100px 160px 1fr 100px;
+    gap: 16px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--ink-100);
+    font-size: 12px;
+    align-items: center;
+  }
+  .audit-row:hover { background: var(--ink-50); }
+  .audit-row.head {
+    background: var(--ink-50);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-500);
+    font-weight: 600;
+  }
+  .audit-ts { font-family: var(--font-mono); color: var(--ink-500); font-size: 11px; }
+  .audit-actor { font-weight: 500; }
+  .audit-action { font-family: var(--font-mono); font-size: 11px; }
+  .audit-target { color: var(--ink-700); }
+  .audit-hash { font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); }
+
+  /* ============= MISC ============= */
+  .risk-bar {
+    display: flex;
+    height: 6px;
+    background: var(--ink-100);
+    border-radius: 3px;
+    overflow: hidden;
+    width: 60px;
+  }
+  .risk-fill { height: 100%; }
+  .risk-fill.low { background: var(--aramco-green); }
+  .risk-fill.med { background: var(--gold); }
+  .risk-fill.high { background: var(--error); }
+
+  .health-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+  }
+  .health-pill.good { background: var(--aramco-green-50); color: var(--aramco-green-dark); }
+  .health-pill.mid { background: #FDF4E0; color: var(--gold); }
+  .health-pill.bad { background: var(--error-bg); color: var(--error); }
+
+  .footer-note {
+    margin-top: 36px;
+    padding: 16px 20px;
+    background: var(--ink-50);
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--ink-500);
+    font-family: var(--font-mono);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  /* Optimizer "magic moment" reveal */
+  .reveal { opacity: 0; transition: opacity 600ms ease; }
+  .reveal.in { opacity: 1; }
+  .pulse-glow {
+    animation: glow 2s ease-in-out infinite;
+  }
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,132,61,0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(0,132,61,0); }
+  }
+
+  /* Number animation */
+  .anim-num { font-variant-numeric: tabular-nums; }
+
+  /* Sparkline */
+  .spark-path { fill: none; stroke: var(--aramco-green); stroke-width: 1.5; }
+  .spark-area { fill: var(--aramco-green-50); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--ink-200); border-radius: 5px; border: 2px solid var(--paper); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-300); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- BRAND -->
+  <div class="brand">
+    <div class="brand-logo">A</div>
+    <div>
+      <div class="brand-name">Atlas</div>
+      <div class="brand-sub">Aramco Capital Allocation</div>
+    </div>
+  </div>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="breadcrumb">
+      <span id="crumb-1">Home</span> / <b id="crumb-2">Executive Dashboard</b>
+    </div>
+    <div class="topbar-right">
+      <div class="freshness">
+        <div class="freshness-dot"></div>
+        <span>SAP PM · 4 min ago</span>
+        <span style="margin: 0 8px; color: var(--ink-200);">|</span>
+        <span>PI · 1 min ago</span>
+      </div>
+      <div class="role-switch">
+        <div class="role-avatar" id="role-avatar">AS</div>
+        <select id="role-select" onchange="switchRole(this.value)">
+          <option value="cfo">CFO · Al-Sayegh</option>
+          <option value="planner" selected>Planner · Altoraifi</option>
+          <option value="asset">Asset Owner · Al-Nasser</option>
+          <option value="auditor">Auditor · KPMG</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-group">
+      <div class="nav-group-title">Workspace</div>
+      <div class="nav-item active" onclick="showView('dashboard')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        <span>Executive Dashboard</span>
+      </div>
+      <div class="nav-item" onclick="showView('planner')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+        <span>Planner Home</span>
+        <span class="nav-badge">7</span>
+      </div>
+      <div class="nav-item" onclick="showView('optimizer')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
+        <span>Optimizer Run</span>
+      </div>
+      <div class="nav-item" onclick="showView('agents')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M9 6V4a3 3 0 016 0v2M9 13h6"/></svg>
+        <span>Agent Queues</span>
+        <span class="nav-badge warn">12</span>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Data</div>
+      <div class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="4"/><rect x="3" y="10" width="18" height="4"/><rect x="3" y="16" width="18" height="4"/></svg>
+        <span>Portfolio</span>
+      </div>
+      <div class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span>Assets</span>
+      </div>
+      <div class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M6 12h12M9 18h6"/></svg>
+        <span>Procurement</span>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Governance</div>
+      <div class="nav-item" onclick="showView('audit')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>
+        <span>Audit Log</span>
+      </div>
+      <div class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"/></svg>
+        <span>Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ============ DASHBOARD VIEW ============ -->
+    <div class="view active" id="view-dashboard">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Capital Portfolio · FY2026</h1>
+          <div class="page-subtitle">Last sync 4 min ago · 3,847 active candidates · $42.1B committed envelope</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">Export PDF</button>
+          <button class="btn btn-primary" onclick="showView('optimizer')">+ New Scenario</button>
+        </div>
+      </div>
+
+      <!-- KPI STRIP -->
+      <div class="kpi-strip">
+        <div class="kpi">
+          <div class="kpi-label">Portfolio NPV</div>
+          <div class="kpi-value num">$68.4<span class="unit">B</span></div>
+          <div class="kpi-delta up">▲ $3.2B vs. baseline</div>
+          <svg class="kpi-spark" width="80" height="32" viewBox="0 0 80 32">
+            <path class="spark-area" d="M0,24 L10,22 L20,20 L30,18 L40,14 L50,12 L60,8 L70,6 L80,4 L80,32 L0,32 Z"/>
+            <path class="spark-path" d="M0,24 L10,22 L20,20 L30,18 L40,14 L50,12 L60,8 L70,6 L80,4"/>
+          </svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Weighted IRR</div>
+          <div class="kpi-value num">17.2<span class="unit">%</span></div>
+          <div class="kpi-delta up">▲ 0.8pp QoQ</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Capex Committed</div>
+          <div class="kpi-value num">$42.1<span class="unit">B</span></div>
+          <div class="kpi-delta" style="color: var(--ink-500)">94% of envelope</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Cycle Time</div>
+          <div class="kpi-value num">5.8<span class="unit">mo</span></div>
+          <div class="kpi-delta up">▼ 3.2mo vs. legacy</div>
+        </div>
+      </div>
+
+      <!-- ROW 2: Strategic mix + Top projects -->
+      <div class="grid grid-23" style="margin-bottom: 16px;">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Top 10 Projects by NPV</div>
+              <div class="card-subtitle">Ranked at portfolio WACC 8.0% · RCF-adjusted</div>
+            </div>
+            <button class="btn btn-ghost">View all 3,847</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Type</th>
+                <th class="num">Capex</th>
+                <th class="num">NPV</th>
+                <th class="num">IRR</th>
+                <th>Risk</th>
+              </tr>
+            </thead>
+            <tbody id="top-projects"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Strategic Mix</div>
+              <div class="card-subtitle">Capex by bucket</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="donut-card">
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <!-- Donut chart -->
+                <circle cx="70" cy="70" r="50" fill="none" stroke="var(--ink-100)" stroke-width="22"/>
+                <circle cx="70" cy="70" r="50" fill="none" stroke="#00843D" stroke-width="22"
+                        stroke-dasharray="138 314" stroke-dashoffset="0" transform="rotate(-90 70 70)"/>
+                <circle cx="70" cy="70" r="50" fill="none" stroke="#006030" stroke-width="22"
+                        stroke-dasharray="78 314" stroke-dashoffset="-138" transform="rotate(-90 70 70)"/>
+                <circle cx="70" cy="70" r="50" fill="none" stroke="#C9A24B" stroke-width="22"
+                        stroke-dasharray="48 314" stroke-dashoffset="-216" transform="rotate(-90 70 70)"/>
+                <circle cx="70" cy="70" r="50" fill="none" stroke="#92C6A5" stroke-width="22"
+                        stroke-dasharray="32 314" stroke-dashoffset="-264" transform="rotate(-90 70 70)"/>
+                <circle cx="70" cy="70" r="50" fill="none" stroke="#5A6B63" stroke-width="22"
+                        stroke-dasharray="18 314" stroke-dashoffset="-296" transform="rotate(-90 70 70)"/>
+                <text x="70" y="68" text-anchor="middle" font-family="Fraunces" font-size="20" font-weight="500">$42.1B</text>
+                <text x="70" y="83" text-anchor="middle" font-size="9" fill="#5A6B63" letter-spacing="1">COMMITTED</text>
+              </svg>
+              <div class="donut-legend">
+                <div class="donut-legend-row">
+                  <div class="donut-legend-swatch" style="background:#00843D;"></div>
+                  <span class="donut-legend-label">Upstream</span>
+                  <span class="donut-legend-val">$18.4B · 44%</span>
+                </div>
+                <div class="donut-legend-row">
+                  <div class="donut-legend-swatch" style="background:#006030;"></div>
+                  <span class="donut-legend-label">Downstream</span>
+                  <span class="donut-legend-val">$10.4B · 25%</span>
+                </div>
+                <div class="donut-legend-row">
+                  <div class="donut-legend-swatch" style="background:#C9A24B;"></div>
+                  <span class="donut-legend-label">Chemicals</span>
+                  <span class="donut-legend-val">$6.4B · 15%</span>
+                </div>
+                <div class="donut-legend-row">
+                  <div class="donut-legend-swatch" style="background:#92C6A5;"></div>
+                  <span class="donut-legend-label">Renewables</span>
+                  <span class="donut-legend-val">$4.3B · 10%</span>
+                </div>
+                <div class="donut-legend-row">
+                  <div class="donut-legend-swatch" style="background:#5A6B63;"></div>
+                  <span class="donut-legend-label">Sustaining</span>
+                  <span class="donut-legend-val">$2.4B · 6%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 3: Scenarios + Alerts -->
+      <div class="grid grid-23">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Recent Scenarios</div>
+              <div class="card-subtitle">Last 3 saved runs</div>
+            </div>
+            <button class="btn btn-ghost">All scenarios →</button>
+          </div>
+          <div class="card-body" style="padding: 14px;">
+            <div class="grid grid-3" style="gap: 12px;">
+              <div class="scenario-card" onclick="showView('optimizer')">
+                <div class="scenario-name">Base Case 2026</div>
+                <div class="scenario-desc">$40B envelope · NPV-max objective</div>
+                <div class="scenario-metrics">
+                  <div class="scenario-metric"><div class="lbl">NPV</div><div class="vl">$68.4B</div></div>
+                  <div class="scenario-metric"><div class="lbl">IRR</div><div class="vl">17.2%</div></div>
+                  <div class="scenario-metric"><div class="lbl">Projects</div><div class="vl">847</div></div>
+                </div>
+              </div>
+              <div class="scenario-card" onclick="showView('optimizer')">
+                <div class="scenario-name">Capex −15%</div>
+                <div class="scenario-desc">Reliability-floor constrained</div>
+                <div class="scenario-metrics">
+                  <div class="scenario-metric"><div class="lbl">NPV</div><div class="vl">$61.2B</div></div>
+                  <div class="scenario-metric"><div class="lbl">IRR</div><div class="vl">19.4%</div></div>
+                  <div class="scenario-metric"><div class="lbl">Projects</div><div class="vl">712</div></div>
+                </div>
+              </div>
+              <div class="scenario-card" onclick="showView('optimizer')">
+                <div class="scenario-name">Robust (CVaR 95)</div>
+                <div class="scenario-desc">Low-oil-price downside protected</div>
+                <div class="scenario-metrics">
+                  <div class="scenario-metric"><div class="lbl">NPV</div><div class="vl">$64.1B</div></div>
+                  <div class="scenario-metric"><div class="lbl">IRR</div><div class="vl">16.1%</div></div>
+                  <div class="scenario-metric"><div class="lbl">Projects</div><div class="vl">789</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Alerts &amp; Actions</div>
+              <div class="card-subtitle">Requiring attention</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-warn">
+              <span class="alert-icon">⚠</span>
+              <div class="alert-body">
+                <strong>3 projects above $500M threshold</strong>
+                <span>Awaiting Exec Committee routing — submitted yesterday by Capital Planning</span>
+              </div>
+            </div>
+            <div class="alert alert-warn">
+              <span class="alert-icon">⚠</span>
+              <div class="alert-body">
+                <strong>Sole-source supplier risk · 12 SKUs</strong>
+                <span>Vendor V-7841 (turbomachinery spares) OTD dropped to 71% — Procurement Intelligence flagged 14h ago</span>
+              </div>
+            </div>
+            <div class="alert alert-info">
+              <span class="alert-icon">ⓘ</span>
+              <div class="alert-body">
+                <strong>Master Plan Agent draft ready</strong>
+                <span>5-year plan v2026.1 awaiting CFO + Capital Planning Lead signature</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Atlas v0.9 · Sovereign region eu-ksa-1 · Last audit chain verified 2026-05-25 03:14 UTC · 47,283 events sealed
+      </div>
+    </div>
+
+    <!-- ============ OPTIMIZER VIEW ============ -->
+    <div class="view" id="view-optimizer">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Optimizer · Scenario Workbench</h1>
+          <div class="page-subtitle">Solve portfolio MILP · Gurobi 11.0.2 · 3,847 candidates in scope</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">Save draft</button>
+          <button class="btn btn-ghost">Load scenario</button>
+        </div>
+      </div>
+
+      <div class="opt-layout">
+        <!-- LEFT: config -->
+        <div class="opt-config">
+          <div class="control-group">
+            <div class="control-label">Objective</div>
+            <div class="radio-stack">
+              <div class="radio-opt selected" onclick="selectObj(this, 'npv')">
+                <div class="radio-dot"></div>
+                <div>
+                  <div style="font-weight:500;">Maximize NPV</div>
+                  <div style="font-size:10px; color:var(--ink-500); margin-top:2px;">Σ NPVᵢ · xᵢ</div>
+                </div>
+              </div>
+              <div class="radio-opt" onclick="selectObj(this, 'npvrisk')">
+                <div class="radio-dot"></div>
+                <div>
+                  <div style="font-weight:500;">NPV per Risk</div>
+                  <div style="font-size:10px; color:var(--ink-500); margin-top:2px;">α = 0.01</div>
+                </div>
+              </div>
+              <div class="radio-opt" onclick="selectObj(this, 'cvar')">
+                <div class="radio-dot"></div>
+                <div>
+                  <div style="font-weight:500;">Robust (CVaR 95)</div>
+                  <div style="font-size:10px; color:var(--ink-500); margin-top:2px;">3 price scenarios</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">Budget Envelope</div>
+            <div class="slider-row">
+              <span class="label">FY2026 Capex</span>
+              <span class="val mono" id="budget-val">$40.0B</span>
+            </div>
+            <input type="range" min="25" max="50" value="40" step="0.5" oninput="document.getElementById('budget-val').textContent = '$' + parseFloat(this.value).toFixed(1) + 'B'">
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">Risk Ceiling</div>
+            <div class="slider-row">
+              <span class="label">Weighted risk</span>
+              <span class="val mono" id="risk-val">42</span>
+            </div>
+            <input type="range" min="20" max="80" value="42" oninput="document.getElementById('risk-val').textContent = this.value">
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">Strategic Floors</div>
+            <div class="slider-row"><span class="label">Renewables min</span><span class="val mono">$4.0B</span></div>
+            <div class="slider-row"><span class="label">Sustaining min</span><span class="val mono">$2.0B</span></div>
+            <div class="slider-row"><span class="label">Regulatory min</span><span class="val mono">$1.5B</span></div>
+          </div>
+
+          <button class="btn btn-primary pulse-glow" style="width:100%; padding: 12px; font-size: 13px; justify-content:center;" id="run-btn" onclick="runOptimizer()">
+            ▶ Run Optimizer
+          </button>
+        </div>
+
+        <!-- RIGHT: stage -->
+        <div class="opt-stage">
+          <div class="opt-stage-title">Run output</div>
+          <div class="opt-stage-sub" id="run-sub">Configure constraints and run — typical solve time &lt;60s at 1% optimality gap</div>
+
+          <!-- Stages -->
+          <div class="stages" id="stages">
+            <div class="stage" data-stage="0">
+              <div class="stage-num"><span>1</span></div>
+              <span class="stage-label">Load</span>
+            </div>
+            <div class="stage" data-stage="1">
+              <div class="stage-num"><span>2</span></div>
+              <span class="stage-label">Preprocess</span>
+            </div>
+            <div class="stage" data-stage="2">
+              <div class="stage-num"><span>3</span></div>
+              <span class="stage-label">Solve MILP</span>
+            </div>
+            <div class="stage" data-stage="3">
+              <div class="stage-num"><span>4</span></div>
+              <span class="stage-label">Post-process</span>
+            </div>
+          </div>
+
+          <div class="opt-viz">
+            <div class="opt-status" id="opt-status" style="display:none;">
+              <div class="opt-spinner"></div>
+              <div class="opt-status-text" id="opt-status-text">Loading candidate universe…</div>
+              <div class="opt-status-meta" id="opt-status-meta">3,847 binaries · 8,420 constraints</div>
+            </div>
+
+            <!-- Idle hint -->
+            <div id="opt-idle" style="text-align:center; padding: 60px 20px; color: var(--ink-400);">
+              <svg width="80" height="80" viewBox="0 0 80 80" style="margin-bottom:16px; opacity:0.4;">
+                <circle cx="40" cy="40" r="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 4"/>
+                <circle cx="40" cy="40" r="3" fill="currentColor"/>
+                <line x1="40" y1="40" x2="56" y2="26" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <div style="font-family: var(--font-display); font-size: 16px; color: var(--ink-500);">Ready to optimize</div>
+              <div style="font-size: 12px; margin-top: 4px;">Press <b>Run Optimizer</b> to solve the MILP across 3,847 candidates</div>
+            </div>
+
+            <!-- Pareto + Results (hidden until run) -->
+            <div id="opt-results" style="display:none;">
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                  <div style="font-size:11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-500); font-weight: 600; margin-bottom: 8px;">Pareto Frontier · NPV vs Risk</div>
+                  <svg class="pareto-chart" id="pareto-svg" viewBox="0 0 400 280" preserveAspectRatio="none">
+                    <!-- Grid -->
+                    <line class="pareto-grid" x1="40" y1="40" x2="400" y2="40"/>
+                    <line class="pareto-grid" x1="40" y1="100" x2="400" y2="100"/>
+                    <line class="pareto-grid" x1="40" y1="160" x2="400" y2="160"/>
+                    <line class="pareto-grid" x1="40" y1="220" x2="400" y2="220"/>
+                    <!-- Axes -->
+                    <line class="pareto-axis" x1="40" y1="40" x2="40" y2="240"/>
+                    <line class="pareto-axis" x1="40" y1="240" x2="400" y2="240"/>
+                    <!-- Labels -->
+                    <text x="40" y="260" font-size="10" fill="#5A6B63">Low risk</text>
+                    <text x="350" y="260" font-size="10" fill="#5A6B63">High risk</text>
+                    <text x="8" y="44" font-size="10" fill="#5A6B63">$70B</text>
+                    <text x="8" y="244" font-size="10" fill="#5A6B63">$50B</text>
+                    <!-- Dots populated by JS -->
+                    <g id="pareto-dots"></g>
+                    <!-- Frontier curve -->
+                    <path id="pareto-curve" stroke="var(--aramco-green)" stroke-width="1.5" fill="none" stroke-dasharray="3 3" opacity="0"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-size:11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-500); font-weight: 600; margin-bottom: 8px;">Solve diagnostics</div>
+                  <div style="background: var(--ink-50); border-radius: 8px; padding: 14px 16px; font-family: var(--font-mono); font-size: 11px; line-height: 1.8;" id="solve-diag">
+                    <div>solver         : Gurobi 11.0.2</div>
+                    <div>candidates     : 3,847</div>
+                    <div>variables      : 3,847 binary</div>
+                    <div>constraints    : 8,420</div>
+                    <div>objective      : MAX_NPV</div>
+                    <div style="color: var(--aramco-green); font-weight: 600;">runtime        : <span id="diag-runtime">47.3</span>s</div>
+                    <div style="color: var(--aramco-green); font-weight: 600;">opt. gap       : <span id="diag-gap">0.8</span>%</div>
+                    <div>binding (1)    : capex envelope</div>
+                    <div>binding (2)    : engineering FTE Q3</div>
+                    <div>binding (3)    : marine vessels Q2</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top: 24px;">
+                <div style="font-size:11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-500); font-weight: 600; margin-bottom: 10px;">Three Pareto-optimal portfolios · click to compare</div>
+                <div class="opt-results-grid" id="result-tiles"></div>
+              </div>
+
+              <div style="margin-top:20px; padding: 16px 18px; background: linear-gradient(135deg, var(--aramco-green-50) 0%, #F5FAF6 100%); border: 1px solid var(--aramco-green-100); border-radius: 10px; font-size: 12px; line-height: 1.65;">
+                <div style="font-family: var(--font-display); font-size: 15px; margin-bottom: 6px; color: var(--aramco-green-dark); font-weight: 500;">Atlas rationale</div>
+                Capex envelope binds at $40.0B with 12% slack on risk ceiling — the optimizer favored 23 high-NPV upstream projects deferred from FY2025. Three projects moved out: <span class="mono">P-2841</span> (NPV $410M, dependency on stale RUL forecast), <span class="mono">P-3105</span>, <span class="mono">P-3902</span>. Engineering FTE binds in Q3 — adding 8 FTE relaxes by $1.2B NPV.
+              </div>
+
+              <div style="margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn btn-ghost">Save scenario</button>
+                <button class="btn btn-ghost">Compare 4-up</button>
+                <button class="btn btn-primary">Route for approval →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PLANNER VIEW ============ -->
+    <div class="view" id="view-planner">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Planner Home</h1>
+          <div class="page-subtitle">Active scenarios · pending validations · 7 items requiring action</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">Templates</button>
+          <button class="btn btn-primary" onclick="showView('optimizer')">+ New Scenario</button>
+        </div>
+      </div>
+
+      <!-- KPI mini -->
+      <div class="kpi-strip" style="grid-template-columns: repeat(4,1fr);">
+        <div class="kpi">
+          <div class="kpi-label">Active Scenarios</div>
+          <div class="kpi-value num">6</div>
+          <div class="kpi-delta" style="color:var(--ink-500)">2 awaiting approval</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Override Rate</div>
+          <div class="kpi-value num">21<span class="unit">%</span></div>
+          <div class="kpi-delta up">▼ 3pp this quarter</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Agent Queue</div>
+          <div class="kpi-value num">12</div>
+          <div class="kpi-delta down">3 SLA-warning</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Last Optimizer Run</div>
+          <div class="kpi-value num">47<span class="unit">s</span></div>
+          <div class="kpi-delta" style="color:var(--ink-500)">0.8% optimality gap</div>
+        </div>
+      </div>
+
+      <!-- My Scenarios -->
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-head">
+          <div>
+            <div class="card-title">My Scenarios</div>
+            <div class="card-subtitle">Updated in the last 30 days</div>
+          </div>
+          <button class="btn btn-ghost">View all</button>
+        </div>
+        <div class="card-body">
+          <div class="grid grid-3">
+            <div class="scenario-card" onclick="showView('optimizer')">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div class="scenario-name">FY2026 Base Case</div>
+                  <div class="scenario-desc">$40B envelope · NPV-max</div>
+                </div>
+                <span class="chip chip-green">Approved</span>
+              </div>
+              <div class="scenario-metrics">
+                <div class="scenario-metric"><div class="lbl">NPV</div><div class="vl">$68.4B</div></div>
+                <div class="scenario-metric"><div class="lbl">Projects</div><div class="vl">847</div></div>
+                <div class="scenario-metric"><div class="lbl">Run</div><div class="vl">47.3s</div></div>
+              </div>
+            </div>
+            <div class="scenario-card" onclick="showView('optimizer')">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div class="scenario-name">Capex −15% stress</div>
+                  <div class="scenario-desc">Reliability-floor constrained</div>
+                </div>
+                <span class="chip chip-gold">In review</span>
+              </div>
+              <div class="scenario-metrics">
+                <div class="scenario-metric"><div class="lbl">NPV</div><div class="vl">$61.2B</div></div>
+                <div class="scenario-metric"><div class="lbl">Projects</div><div class="vl">712</div></div>
+                <div class="scenario-metric"><div class="lbl">Run</div><div class="vl">52.1s</div></div>
+              </div>
+            </div>
+            <div class="scenario-card" onclick="showView('optimizer')">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div class="scenario-name">Brent $60 downside</div>
+                  <div class="scenario-desc">CVaR-95 robust portfolio</div>
+                </div>
+                <span class="chip chip-info">Draft</span>
+              </div>
+              <div class="scenario-metrics">
+                <div class="scenario-metric"><div class="lbl">NPV</div><div class="vl">$64.1B</div></div>
+                <div class="scenario-metric"><div class="lbl">Projects</div><div class="vl">789</div></div>
+                <div class="scenario-metric"><div class="lbl">Run</div><div class="vl">3m 14s</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending validations -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Pending Validations</div>
+            <div class="card-subtitle">RUL forecasts, agent suggestions, and candidate submissions awaiting your review</div>
+          </div>
+          <button class="btn btn-ghost" onclick="showView('agents')">Agent Queues →</button>
+        </div>
+        <div class="card-body flush">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Source</th>
+                <th>Submitted</th>
+                <th>SLA</th>
+                <th>Confidence</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div style="font-weight:500;">RUL revision · Compressor C-7841</div><div class="id mono">EQ-9024412 · Khurais</div></td>
+                <td><span class="chip chip-green">Asset Agent</span></td>
+                <td>2h ago</td>
+                <td><span class="sla-timer">2d 14h</span></td>
+                <td><div class="agent-confidence"><div class="confidence-bar"><div class="confidence-fill" style="width:94%"></div></div><span class="mono">0.94</span></div></td>
+                <td><button class="btn btn-ghost btn-mini">Review</button></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:500;">New candidate · Hawiyah Phase III expansion</div><div class="id mono">P-4112 · $1.8B capex</div></td>
+                <td><span class="chip chip-info">Sponsor</span></td>
+                <td>5h ago</td>
+                <td><span class="sla-timer warn">11h</span></td>
+                <td>—</td>
+                <td><button class="btn btn-ghost btn-mini">Review</button></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:500;">Supplier flag · V-7841 (Siemens Energy spares)</div><div class="id mono">OTD 71% over 90d</div></td>
+                <td><span class="chip chip-warn">Procurement</span></td>
+                <td>14h ago</td>
+                <td><span class="sla-timer warn">3h</span></td>
+                <td><div class="agent-confidence"><div class="confidence-bar"><div class="confidence-fill" style="width:88%"></div></div><span class="mono">0.88</span></div></td>
+                <td><button class="btn btn-ghost btn-mini">Review</button></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:500;">Master Plan 5-yr draft v2026.1</div><div class="id mono">847 projects · $40.0B</div></td>
+                <td><span class="chip chip-gold">Master Plan Agent</span></td>
+                <td>1d ago</td>
+                <td><span class="sla-timer">8d 4h</span></td>
+                <td><div class="agent-confidence"><div class="confidence-bar"><div class="confidence-fill" style="width:91%"></div></div><span class="mono">0.91</span></div></td>
+                <td><button class="btn btn-ghost btn-mini">Review</button></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:500;">Reservoir tie-in · Manifa offshore</div><div class="id mono">P-3902 · $620M capex</div></td>
+                <td><span class="chip chip-info">Sponsor</span></td>
+                <td>2d ago</td>
+                <td><span class="sla-timer">5d</span></td>
+                <td>—</td>
+                <td><button class="btn btn-ghost btn-mini">Review</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Atlas v0.9 · Showing data sourced from SAP S/4HANA PM (4 min stale), PI System (1 min), Primavera P6 (28 min), SAP MM (4 min)
+      </div>
+    </div>
+
+    <!-- ============ AGENTS VIEW ============ -->
+    <div class="view" id="view-agents">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Agent Review Queues</h1>
+          <div class="page-subtitle">Suggestions from Asset Inventory, Master Plan, and Compliance &amp; Audit agents · 12 open</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">Configure SLAs</button>
+          <button class="btn btn-ghost">Audit trail →</button>
+        </div>
+      </div>
+
+      <!-- 3 agent columns -->
+      <div class="grid grid-3" style="align-items: flex-start;">
+
+        <!-- ASSET INVENTORY AGENT -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+            <div>
+              <div style="font-family: var(--font-display); font-size: 18px;">Asset Inventory</div>
+              <div style="font-size: 11px; color: var(--ink-500); font-family: var(--font-mono);">Gemini 2.5 Pro · suggest-only · 6 open</div>
+            </div>
+            <span class="chip chip-green">Active</span>
+          </div>
+
+          <div style="display:flex; flex-direction: column; gap: 12px;">
+            <div class="agent-card escalated">
+              <div class="agent-row">
+                <div>
+                  <div class="agent-title">Reclassify EQ-9024412 to ISO 14224 §2.3.1</div>
+                  <div class="agent-meta">Compressor · Khurais · sole-sourced spare</div>
+                </div>
+                <span class="sla-timer warn">3h SLA</span>
+              </div>
+              <div class="agent-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width:94%"></div></div>
+                <span class="mono">0.94 confidence</span>
+              </div>
+              <div class="reasoning">
+                Asset master classifies as <span class="mono">RECIP-COMP</span> but PI tag pattern matches centrifugal envelope <a class="reasoning-cite">SAP PM EQ-9024412</a>; 7 work orders since 2022 reference <a class="reasoning-cite">centrifugal seal kits</a>. Recommend reclass + BOM linkage update.
+              </div>
+              <div class="agent-actions">
+                <button class="btn-mini btn-accept">Accept</button>
+                <button class="btn-mini btn-modify">Modify</button>
+                <button class="btn-mini btn-reject">Reject</button>
+              </div>
+            </div>
+
+            <div class="agent-card">
+              <div class="agent-row">
+                <div>
+                  <div class="agent-title">Duplicate detected · pumps P-7782/P-7783</div>
+                  <div class="agent-meta">Yanbu Refinery · same nameplate, different IDs</div>
+                </div>
+                <span class="sla-timer">4d</span>
+              </div>
+              <div class="agent-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width:87%"></div></div>
+                <span class="mono">0.87 confidence</span>
+              </div>
+              <div class="reasoning">
+                Identical manufacturer, model, location, install date, and PI tag prefix. Likely SAP PM data duplication during 2019 migration. Recommend merge to canonical ID.
+              </div>
+              <div class="agent-actions">
+                <button class="btn-mini btn-accept">Accept</button>
+                <button class="btn-mini btn-modify">Modify</button>
+                <button class="btn-mini btn-reject">Reject</button>
+              </div>
+            </div>
+
+            <div class="agent-card">
+              <div class="agent-row">
+                <div>
+                  <div class="agent-title">Missing asset · 12 transformers</div>
+                  <div class="agent-meta">Active PI tags, no SAP PM record · Berri</div>
+                </div>
+                <span class="sla-timer">3d</span>
+              </div>
+              <div class="agent-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width:82%"></div></div>
+                <span class="mono">0.82 confidence</span>
+              </div>
+              <div class="agent-actions">
+                <button class="btn-mini btn-accept">Accept</button>
+                <button class="btn-mini btn-modify">Modify</button>
+                <button class="btn-mini btn-reject">Reject</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MASTER PLAN AGENT -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+            <div>
+              <div style="font-family: var(--font-display); font-size: 18px;">Master Plan</div>
+              <div style="font-size: 11px; color: var(--ink-500); font-family: var(--font-mono);">Gemini 2.5 Pro · draft+approve · 2 open</div>
+            </div>
+            <span class="chip chip-gold">Two-person rule</span>
+          </div>
+
+          <div style="display:flex; flex-direction: column; gap: 12px;">
+            <div class="agent-card escalated">
+              <div class="agent-row">
+                <div>
+                  <div class="agent-title">5-Year Plan v2026.1</div>
+                  <div class="agent-meta">847 projects · $40.0B · Q3 FTE binds</div>
+                </div>
+                <span class="sla-timer">8d</span>
+              </div>
+              <div class="agent-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width:91%"></div></div>
+                <span class="mono">0.91 plan-acceptance forecast</span>
+              </div>
+              <div class="reasoning">
+                Plan delivers <b>$68.4B NPV</b> vs. $65.1B baseline. Key shifts: +23 upstream tie-ins (deferred from FY25), −5 sustaining projects with <a class="reasoning-cite">RUL P50 &gt; 10y</a>, +$0.4B renewables to hit strategic floor. Calls <a class="reasoning-cite">Optimizer Run #4831</a> as tool. Requires Planning Lead + CFO signature.
+              </div>
+              <div class="agent-actions">
+                <button class="btn-mini btn-accept">View &amp; sign</button>
+                <button class="btn-mini btn-modify">Modify</button>
+                <button class="btn-mini btn-reject">Reject</button>
+              </div>
+            </div>
+
+            <div class="agent-card">
+              <div class="agent-row">
+                <div>
+                  <div class="agent-title">20-Year horizon · scenario set A</div>
+                  <div class="agent-meta">Energy transition pathway · 4 price scenarios</div>
+                </div>
+                <span class="sla-timer">9d</span>
+              </div>
+              <div class="agent-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width:76%"></div></div>
+                <span class="mono">0.76 confidence (low — early draft)</span>
+              </div>
+              <div class="reasoning">
+                Long-horizon draft incorporating IEA WEO 2025 trajectories + corporate decarbonization commitments. Agent flagged as <b>low-confidence early draft</b> — strategy team review recommended before SME validation.
+              </div>
+              <div class="agent-actions">
+                <button class="btn-mini btn-accept">Open draft</button>
+                <button class="btn-mini btn-reject">Discard</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPLIANCE AGENT -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+            <div>
+              <div style="font-family: var(--font-display); font-size: 18px;">Compliance &amp; Audit</div>
+              <div style="font-size: 11px; color: var(--ink-500); font-family: var(--font-mono);">Llama 3.3 70B · on-prem · 4 open</div>
+            </div>
+            <span class="chip chip-info">On-prem</span>
+          </div>
+
+          <div style="display:flex; flex-direction: column; gap: 12px;">
+            <div class="agent-card escalated">
+              <div class="agent-row">
+                <div>
+                  <div class="agent-title">SoD review · 1 violation flagged</div>
+                  <div class="agent-meta">Policy SOD-CAP-02 v3.1</div>
+                </div>
+                <span class="sla-timer warn">12h SLA</span>
+              </div>
+              <div class="agent-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width:99%"></div></div>
+                <span class="mono">0.99 confidence</span>
+              </div>
+              <div class="reasoning">
+                User <span class="mono">u-3417</span> attempted approval of <span class="mono">P-2884</span> (own-sponsored). Blocked at API per <a class="reasoning-cite">policy SOD-CAP-02 §4.2</a>. Audit event <span class="mono">AE-47281</span> sealed. Recommend Compliance Officer disposition + user training.
+              </div>
+              <div class="agent-actions">
+                <button class="btn-mini btn-accept">Disposition</button>
+                <button class="btn-mini btn-modify">Add note</button>
+              </div>
+            </div>
+
+            <div class="agent-card">
+              <div class="agent-row">
+                <div>
+                  <div class="agent-title">Q1 audit evidence pack ready</div>
+                  <div class="agent-meta">14,283 events · chain verified · 47-page PDF</div>
+                </div>
+                <span class="sla-timer">4d</span>
+              </div>
+              <div class="agent-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width:97%"></div></div>
+                <span class="mono">0.97 confidence</span>
+              </div>
+              <div class="reasoning">
+                Auto-generated quarterly evidence pack covering portfolio approvals, RUL overrides, supplier dispositions. All chain hashes verify. Ready for external auditor (KPMG) export.
+              </div>
+              <div class="agent-actions">
+                <button class="btn-mini btn-accept">Download</button>
+                <button class="btn-mini btn-modify">Review first</button>
+              </div>
+            </div>
+
+            <div class="agent-card">
+              <div class="agent-row">
+                <div>
+                  <div class="agent-title">Threshold review · 3 projects</div>
+                  <div class="agent-meta">$500M+ pending Exec Committee routing</div>
+                </div>
+                <span class="sla-timer">2d</span>
+              </div>
+              <div class="agent-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width:95%"></div></div>
+                <span class="mono">0.95 confidence</span>
+              </div>
+              <div class="agent-actions">
+                <button class="btn-mini btn-accept">Route</button>
+                <button class="btn-mini btn-reject">Hold</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        All agent outputs logged to MLflow + Azure Monitor · prompts + reasoning traces retained 25 years · kill-switch available in Admin
+      </div>
+    </div>
+
+    <!-- ============ AUDIT VIEW ============ -->
+    <div class="view" id="view-audit">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Audit Log</h1>
+          <div class="page-subtitle">Immutable event chain · HMAC-SHA256 verified nightly · 47,283 sealed events</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">Filter</button>
+          <button class="btn btn-gold">⬇ Signed PDF export</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="audit-row head">
+          <div>Time</div>
+          <div>Actor</div>
+          <div>Action</div>
+          <div>Target / Justification</div>
+          <div>Hash</div>
+        </div>
+        <div class="audit-row">
+          <div class="audit-ts">15:42:11</div>
+          <div class="audit-actor">A. Altoraifi</div>
+          <div class="audit-action">SCENARIO.RUN</div>
+          <div class="audit-target">Scenario #4831 · Gurobi · 47.3s · 0.8% gap</div>
+          <div class="audit-hash">7a3f…2c1e</div>
+        </div>
+        <div class="audit-row">
+          <div class="audit-ts">15:38:02</div>
+          <div class="audit-actor">M. Al-Nasser</div>
+          <div class="audit-action">ASSET.OVERRIDE_RUL</div>
+          <div class="audit-target">EQ-9024412 · "Recent inspection 2026-05-12 shows lower wear"</div>
+          <div class="audit-hash">9b4c…8e21</div>
+        </div>
+        <div class="audit-row">
+          <div class="audit-ts">15:21:45</div>
+          <div class="audit-actor">Compliance Agent</div>
+          <div class="audit-action">SOD.VIOLATION_BLOCKED</div>
+          <div class="audit-target">User u-3417 · P-2884 · SOD-CAP-02 §4.2</div>
+          <div class="audit-hash">2d7e…4a09</div>
+        </div>
+        <div class="audit-row">
+          <div class="audit-ts">14:58:31</div>
+          <div class="audit-actor">Master Plan Agent</div>
+          <div class="audit-action">DRAFT.CREATED</div>
+          <div class="audit-target">5-Year Plan v2026.1 · 847 projects · pending signatures</div>
+          <div class="audit-hash">e1f8…b3d5</div>
+        </div>
+        <div class="audit-row">
+          <div class="audit-ts">14:42:09</div>
+          <div class="audit-actor">CFO · F. Al-Sayegh</div>
+          <div class="audit-action">PROJECT.APPROVE</div>
+          <div class="audit-target">P-2841 · $320M · NPV $410M · standard route</div>
+          <div class="audit-hash">5c2a…7f14</div>
+        </div>
+        <div class="audit-row">
+          <div class="audit-ts">14:18:55</div>
+          <div class="audit-actor">Asset Agent</div>
+          <div class="audit-action">SUGGESTION.CREATED</div>
+          <div class="audit-target">EQ-9024412 reclassification · confidence 0.94</div>
+          <div class="audit-hash">8a3b…1c92</div>
+        </div>
+        <div class="audit-row">
+          <div class="audit-ts">13:55:21</div>
+          <div class="audit-actor">A. Altoraifi</div>
+          <div class="audit-action">SUGGESTION.ACCEPTED</div>
+          <div class="audit-target">Asset Agent · P-7782/P-7783 merge</div>
+          <div class="audit-hash">d4e7…6b08</div>
+        </div>
+        <div class="audit-row">
+          <div class="audit-ts">13:12:08</div>
+          <div class="audit-actor">SAP Connector</div>
+          <div class="audit-action">CDC.INGEST</div>
+          <div class="audit-target">SAP S/4HANA PM · 1,247 rows · 0 DQ failures</div>
+          <div class="audit-hash">a9f1…3e7c</div>
+        </div>
+        <div class="audit-row">
+          <div class="audit-ts">12:48:33</div>
+          <div class="audit-actor">System</div>
+          <div class="audit-action">CHAIN.VERIFY</div>
+          <div class="audit-target">47,283 events · all hashes verified · OK</div>
+          <div class="audit-hash">f7c2…9d41</div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Chain integrity verified 2026-05-25 03:14 UTC · next verification 2026-05-26 03:00 UTC · retention 25 years (WORM-locked Azure Immutable Blob)
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ========= DATA =========
+  const topProjects = [
+    { id: 'P-2841', name: 'Hawiyah gas tie-in Phase II',     type: 'Upstream',    capex: 1240, npv: 3120, irr: 22.4, risk: 28 },
+    { id: 'P-3105', name: 'Ras Tanura ULSD Train 4 expansion', type: 'Downstream',  capex: 2850, npv: 4810, irr: 19.1, risk: 41 },
+    { id: 'P-3902', name: 'Manifa offshore reservoir tie-in',  type: 'Upstream',    capex: 620,  npv: 1820, irr: 24.8, risk: 35 },
+    { id: 'P-4112', name: 'Hawiyah Phase III mega-expansion',  type: 'Upstream',    capex: 1800, npv: 2940, irr: 17.6, risk: 47 },
+    { id: 'P-2207', name: 'PlasChem propylene unit retrofit',  type: 'Chemicals',   capex: 980,  npv: 1640, irr: 18.2, risk: 32 },
+    { id: 'P-5018', name: 'Sudair II solar PV 2.0 GW',         type: 'Renewables',  capex: 1410, npv: 1280, irr: 12.4, risk: 22 },
+    { id: 'P-3344', name: 'Berri compressor station rebuild',  type: 'Upstream',    capex: 410,  npv: 1110, irr: 23.7, risk: 26 },
+    { id: 'P-2890', name: 'Yanbu hydrocracker revamp',         type: 'Downstream',  capex: 1620, npv: 2230, irr: 16.8, risk: 38 },
+    { id: 'P-4501', name: 'Jafurah unconventional gas Phase I', type: 'Upstream',    capex: 3200, npv: 4100, irr: 16.2, risk: 52 },
+    { id: 'P-2118', name: 'Wasit GOSP-4 reliability uplift',   type: 'Sustaining',  capex: 280,  npv: 410,  irr: 14.1, risk: 18 },
+  ];
+
+  function riskClass(r) { return r < 30 ? 'low' : r < 45 ? 'med' : 'high'; }
+  function riskWidth(r) { return Math.min(100, r) + '%'; }
+  function fmtUSD(m) { return m >= 1000 ? '$' + (m/1000).toFixed(2) + 'B' : '$' + m + 'M'; }
+
+  function renderTopProjects() {
+    const tbody = document.getElementById('top-projects');
+    tbody.innerHTML = topProjects.map(p => `
+      <tr>
+        <td>
+          <div style="font-weight:500;">${p.name}</div>
+          <div class="id mono">${p.id}</div>
+        </td>
+        <td><span class="chip ${p.type === 'Upstream' ? 'chip-green' : p.type === 'Downstream' ? 'chip-info' : p.type === 'Chemicals' ? 'chip-gold' : p.type === 'Renewables' ? 'chip-green' : 'chip-stale'}">${p.type}</span></td>
+        <td class="num mono">${fmtUSD(p.capex)}</td>
+        <td class="num mono" style="font-weight:600; color: var(--aramco-green-dark);">${fmtUSD(p.npv)}</td>
+        <td class="num mono">${p.irr.toFixed(1)}%</td>
+        <td>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div class="risk-bar"><div class="risk-fill ${riskClass(p.risk)}" style="width:${riskWidth(p.risk)};"></div></div>
+            <span class="mono" style="font-size:11px; color:var(--ink-500);">${p.risk}</span>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ========= NAVIGATION =========
+  function showView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navMap = { dashboard: 0, planner: 1, optimizer: 2, agents: 3, audit: 4 };
+    const navItems = document.querySelectorAll('.nav-item');
+    const titles = {
+      dashboard: ['Home', 'Executive Dashboard'],
+      planner: ['Home', 'Planner Home'],
+      optimizer: ['Portfolio', 'Optimizer Run'],
+      agents: ['Agents', 'Review Queues'],
+      audit: ['Governance', 'Audit Log'],
+    };
+    document.getElementById('crumb-1').textContent = titles[name][0];
+    document.getElementById('crumb-2').textContent = titles[name][1];
+
+    // map clicked nav (rough)
+    const map = {dashboard:0, planner:1, optimizer:2, agents:3, audit:6};
+    if (map[name] !== undefined) navItems[map[name]].classList.add('active');
+
+    window.scrollTo(0,0);
+  }
+
+  // ========= ROLE SWITCH =========
+  function switchRole(role) {
+    const avatars = { cfo: 'FA', planner: 'AS', asset: 'MN', auditor: 'KP' };
+    document.getElementById('role-avatar').textContent = avatars[role];
+  }
+
+  // ========= OPTIMIZER OBJECTIVE =========
+  function selectObj(el, kind) {
+    document.querySelectorAll('.radio-opt').forEach(r => r.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  // ========= OPTIMIZER RUN ANIMATION =========
+  let isRunning = false;
+
+  async function runOptimizer() {
+    if (isRunning) return;
+    isRunning = true;
+
+    const runBtn = document.getElementById('run-btn');
+    runBtn.textContent = '◼ Running…';
+    runBtn.classList.remove('pulse-glow');
+    runBtn.style.opacity = 0.6;
+    runBtn.style.pointerEvents = 'none';
+
+    document.getElementById('opt-idle').style.display = 'none';
+    document.getElementById('opt-results').style.display = 'none';
+    document.getElementById('opt-status').style.display = 'flex';
+    document.getElementById('run-sub').textContent = 'Solving MILP across 3,847 candidates…';
+
+    // Reset stages
+    document.querySelectorAll('.stage').forEach(s => { s.classList.remove('active', 'done'); });
+
+    const stageMsgs = [
+      ['Loading candidate universe…',     '3,847 binaries · 8,420 constraints'],
+      ['Preprocessing constraints…',      'Presolve removed 412 redundant rows'],
+      ['Solving with Gurobi 11.0.2…',     'Branch-and-bound · current gap 4.2%'],
+      ['Post-processing solution…',       'Computing Pareto frontier · 3 candidates'],
+    ];
+
+    for (let i = 0; i < 4; i++) {
+      if (i > 0) {
+        document.querySelectorAll('.stage')[i-1].classList.remove('active');
+        document.querySelectorAll('.stage')[i-1].classList.add('done');
+      }
+      document.querySelectorAll('.stage')[i].classList.add('active');
+      document.getElementById('opt-status-text').textContent = stageMsgs[i][0];
+      document.getElementById('opt-status-meta').textContent = stageMsgs[i][1];
+
+      // animate gap counter during solve stage
+      if (i === 2) {
+        const gaps = [4.2, 3.1, 2.4, 1.8, 1.3, 1.0, 0.8];
+        for (let g of gaps) {
+          document.getElementById('opt-status-meta').textContent = `Branch-and-bound · current gap ${g.toFixed(1)}%`;
+          await sleep(280);
+        }
+      } else {
+        await sleep(900);
+      }
+    }
+
+    document.querySelectorAll('.stage')[3].classList.remove('active');
+    document.querySelectorAll('.stage')[3].classList.add('done');
+    document.getElementById('opt-status').style.display = 'none';
+    document.getElementById('run-sub').textContent = 'Solved in 47.3s · optimality gap 0.8% · three Pareto-optimal portfolios';
+    document.getElementById('opt-results').style.display = 'block';
+
+    // Render results
+    renderParetoDots();
+    renderResultTiles();
+
+    runBtn.textContent = '▶ Re-run';
+    runBtn.style.opacity = 1;
+    runBtn.style.pointerEvents = 'auto';
+    isRunning = false;
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function renderParetoDots() {
+    const svg = document.getElementById('pareto-dots');
+    svg.innerHTML = '';
+
+    // Background "all feasible" dots (faint gray cloud)
+    const cloud = [];
+    for (let i = 0; i < 80; i++) {
+      const x = 50 + Math.random() * 340;
+      const y = 220 - (x - 50) / 340 * 80 - Math.random() * 80;
+      cloud.push({ x, y });
+    }
+    cloud.forEach((d, i) => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', d.x); c.setAttribute('cy', d.y);
+      c.setAttribute('r', 2);
+      c.setAttribute('fill', 'var(--ink-200)');
+      c.setAttribute('opacity', '0');
+      c.classList.add('pareto-dot');
+      svg.appendChild(c);
+      setTimeout(() => c.setAttribute('opacity', '0.5'), i * 8);
+    });
+
+    // Pareto frontier dots
+    const frontier = [
+      { x: 90,  y: 180, label: 'A', color: 'var(--aramco-green)' },
+      { x: 200, y: 110, label: 'B', color: 'var(--aramco-green-dark)' },
+      { x: 320, y: 60,  label: 'C', color: 'var(--gold)' },
+    ];
+    setTimeout(() => {
+      frontier.forEach((d, i) => {
+        setTimeout(() => {
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('cx', d.x); c.setAttribute('cy', d.y);
+          c.setAttribute('r', 7);
+          c.setAttribute('fill', d.color);
+          c.setAttribute('stroke', 'white'); c.setAttribute('stroke-width', '2');
+          c.classList.add('pareto-dot');
+          svg.appendChild(c);
+
+          const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          t.setAttribute('x', d.x); t.setAttribute('y', d.y + 22);
+          t.setAttribute('text-anchor', 'middle');
+          t.setAttribute('font-size', '10');
+          t.setAttribute('font-family', 'IBM Plex Mono');
+          t.setAttribute('font-weight', '600');
+          t.setAttribute('fill', d.color);
+          t.textContent = d.label;
+          svg.appendChild(t);
+        }, i * 200);
+      });
+      // Frontier curve
+      setTimeout(() => {
+        const path = document.getElementById('pareto-curve');
+        path.setAttribute('d', `M 90,180 Q 145,140 200,110 Q 260,80 320,60`);
+        path.style.transition = 'opacity 600ms';
+        path.setAttribute('opacity', '0.5');
+      }, 700);
+    }, 800);
+  }
+
+  function renderResultTiles() {
+    const tiles = [
+      { letter: 'A', label: 'Conservative', npv: '$64.1B', risk: '28', projects: '742', capex: '$38.2B', selected: false, color: 'var(--aramco-green)' },
+      { letter: 'B', label: 'Balanced',    npv: '$68.4B', risk: '42', projects: '847', capex: '$40.0B', selected: true,  color: 'var(--aramco-green-dark)' },
+      { letter: 'C', label: 'Aggressive',  npv: '$72.1B', risk: '58', projects: '903', capex: '$40.0B', selected: false, color: 'var(--gold)' },
+    ];
+    const container = document.getElementById('result-tiles');
+    container.innerHTML = tiles.map((t, i) => `
+      <div class="result-tile ${t.selected ? 'selected' : ''}" onclick="selectTile(this, ${i})">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="result-tile-label">Portfolio ${t.letter}</div>
+            <div class="result-tile-name">${t.label}</div>
+          </div>
+          <div style="width:24px; height:24px; border-radius:50%; background:${t.color}; color:white; display:grid; place-items:center; font-family: var(--font-mono); font-weight:600; font-size:11px;">${t.letter}</div>
+        </div>
+        <div class="result-tile-metric"><span class="label">NPV</span><span class="val">${t.npv}</span></div>
+        <div class="result-tile-metric"><span class="label">Risk index</span><span class="val">${t.risk}</span></div>
+        <div class="result-tile-metric"><span class="label">Projects</span><span class="val">${t.projects}</span></div>
+        <div class="result-tile-metric"><span class="label">Capex used</span><span class="val">${t.capex}</span></div>
+      </div>
+    `).join('');
+  }
+
+  function selectTile(el, i) {
+    document.querySelectorAll('.result-tile').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  // ========= INIT =========
+  renderTopProjects();
+
+</script>
+</body>
+</html>
