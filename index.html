@@ -291,6 +291,35 @@
   .lineage-node.gold { border-color: var(--aramco-green); background: var(--aramco-green-50); color: var(--aramco-green-dark); font-weight: 600; }
   .lineage-arrow { color: var(--ink-400); }
 
+
+  /* AI command palette */
+  #ai-host { position:fixed; inset:0; z-index:9500; display:none; align-items:flex-start; justify-content:center; background:rgba(10,26,20,0.4); backdrop-filter:blur(3px); padding-top:12vh; }
+  #ai-host.open { display:flex; animation:fadeIn 160ms; }
+  .ai-box { background:var(--white); border-radius:14px; box-shadow:var(--shadow-lg); width:100%; max-width:580px; overflow:hidden; animation:modalIn 220ms cubic-bezier(0.2,0.8,0.2,1); }
+  .ai-input-row { display:flex; align-items:center; gap:10px; padding:16px 20px; border-bottom:1px solid var(--ink-100); }
+  .ai-input-row svg { color:var(--aramco-green); flex-shrink:0; }
+  #ai-input { flex:1; border:none; outline:none; font-size:16px; font-family:var(--font-sans); }
+  .ai-suggestions { padding:10px; max-height:340px; overflow-y:auto; }
+  .ai-sug { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:8px; cursor:pointer; font-size:13px; }
+  .ai-sug:hover, .ai-sug.sel { background:var(--aramco-green-50); }
+  .ai-sug-icon { width:28px; height:28px; border-radius:7px; background:var(--ink-50); display:grid; place-items:center; font-size:13px; flex-shrink:0; }
+  .ai-sug-sub { font-size:11px; color:var(--ink-500); }
+  .ai-answer { padding:16px 20px; font-size:13px; line-height:1.6; border-top:1px solid var(--ink-100); background:var(--aramco-green-50); }
+
+  /* Demo coach */
+  #demo-coach { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:9400; background:var(--ink-900); color:white; border-radius:14px; box-shadow:var(--shadow-lg); padding:18px 22px; width:520px; max-width:92vw; display:none; }
+  #demo-coach.open { display:block; animation:toastIn 300ms ease; }
+  .demo-step-num { font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:var(--aramco-green-200); font-weight:600; margin-bottom:6px; }
+  .demo-title { font-family:var(--font-display); font-size:18px; font-weight:500; margin-bottom:6px; }
+  .demo-body { font-size:13px; line-height:1.55; color:rgba(255,255,255,0.82); margin-bottom:14px; }
+  .demo-controls { display:flex; align-items:center; gap:8px; }
+  .demo-dots { display:flex; gap:5px; margin-right:auto; }
+  .demo-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.25); }
+  .demo-dot.on { background:var(--aramco-green); }
+  .demo-btn { padding:7px 14px; border-radius:7px; font-size:12px; font-weight:500; }
+  .demo-btn.primary { background:var(--aramco-green); color:white; }
+  .demo-btn.ghost { background:rgba(255,255,255,0.1); color:white; }
+
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--ink-200); border-radius: 5px; border: 2px solid var(--paper); }
@@ -310,7 +339,15 @@
   <div class="topbar">
     <div class="breadcrumb"><span id="crumb-1">Home</span> / <b id="crumb-2">Executive Dashboard</b></div>
     <div class="topbar-right">
-      <div class="freshness"><div class="freshness-dot"></div><span>SAP PM · 4 min ago</span><span style="margin:0 8px;color:var(--ink-200);">|</span><span>PI · 1 min ago</span></div>
+      <button id="ai-trigger" onclick="openAI()" style="display:flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--ink-200);border-radius:20px;font-size:12px;background:var(--white);color:var(--ink-700);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z"/></svg>
+        Ask Atlas <span style="color:var(--ink-400);font-size:10px;">⌘K</span>
+      </button>
+      <div id="value-tally" onclick="showValueBreakdown()" style="display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:20px;background:var(--aramco-green-50);border:1px solid var(--aramco-green-100);cursor:pointer;" title="Value captured this session">
+        <span style="font-size:14px;">◈</span>
+        <div style="line-height:1;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--aramco-green-dark);font-weight:600;">Captured</div><div class="num" id="tally-amount" style="font-size:13px;font-weight:600;color:var(--aramco-green-dark);">$0M</div></div>
+      </div>
+      <div class="freshness"><div class="freshness-dot"></div><span>SAP PM · 4 min ago</span></div>
       <div class="role-switch">
         <div class="role-avatar" id="role-avatar">AS</div>
         <select id="role-select" onchange="switchRole(this.value)">
@@ -340,7 +377,7 @@
       <div class="nav-item" data-nav="database" onclick="showView('database')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg><span>Integrated Database</span><span class="nav-badge chip-green" style="background:var(--aramco-green)">7</span></div>
       <div class="nav-item" data-nav="procurement" onclick="showView('procurement')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 5h12"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>Procurement Intel</span><span class="nav-badge warn" id="proc-badge">7</span></div>
       <div class="nav-item" data-nav="portfolio" onclick="showView('portfolio')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="4"/><rect x="3" y="10" width="18" height="4"/><rect x="3" y="16" width="18" height="4"/></svg><span>Portfolio</span></div>
-      <div class="nav-item" onclick="toast('info','Assets module','Phase 2 deliverable — not in this prototype')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span>Assets</span></div>
+      <div class="nav-item" data-nav="assets" onclick="showView('assets')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span>Assets</span><span class="nav-badge warn" id="assets-badge">2</span></div>
     </div>
     <div class="nav-group">
       <div class="nav-group-title">Governance</div>
@@ -355,7 +392,7 @@
     <div class="view active" id="view-dashboard">
       <div class="page-head">
         <div><h1 class="page-title">Capital Portfolio · FY2026</h1><div class="page-subtitle">Last sync 4 min ago · 3,847 active candidates · $42.1B committed envelope</div></div>
-        <div class="page-actions"><button class="btn btn-ghost" onclick="exportPDF('Executive Dashboard')">Export PDF</button><button class="btn btn-primary" onclick="showView('optimizer')">+ New Scenario</button></div>
+        <div class="page-actions"><button class="btn btn-gold" onclick="startDemo()">▸ Guided demo</button><button class="btn btn-ghost" onclick="exportPDF('Executive Dashboard')">Export PDF</button><button class="btn btn-primary" onclick="showView('optimizer')">+ New Scenario</button></div>
       </div>
       <div class="kpi-strip">
         <div class="kpi"><div class="kpi-label">Portfolio NPV</div><div class="kpi-value num">$68.4<span class="unit">B</span></div><div class="kpi-delta up">▲ $3.2B vs. baseline</div>
@@ -590,6 +627,38 @@
       <div class="footer-note">Pre-submission overlap check · matches against funded master programs via the integrated database · every decision (merge / link / standalone) is audit-logged</div>
     </div>
 
+    <!-- PREDICTIVE ASSET MANAGEMENT -->
+    <div class="view" id="view-assets">
+      <div class="page-head">
+        <div><h1 class="page-title">Predictive Asset Management</h1><div class="page-subtitle">Health scoring · remaining-useful-life forecasts · replacement-cohort identification</div></div>
+        <div class="page-actions"><button class="btn btn-ghost" onclick="exportPDF('Asset health register')">Export</button><button class="btn btn-primary" onclick="generateCohortProjects()">⚡ Generate replacement projects</button></div>
+      </div>
+      <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);">
+        <div class="kpi"><div class="kpi-label">Fleet Assets</div><div class="kpi-value num" id="ka-total">8</div><div class="kpi-delta" style="color:var(--ink-500)">monitored</div></div>
+        <div class="kpi"><div class="kpi-label">Critical Health</div><div class="kpi-value num" id="ka-critical">2</div><div class="kpi-delta down">health &lt; 25</div></div>
+        <div class="kpi"><div class="kpi-label">RUL &lt; 12 months</div><div class="kpi-value num" id="ka-rul">1</div><div class="kpi-delta down">replace soon</div></div>
+        <div class="kpi"><div class="kpi-label">Replacement Cohorts</div><div class="kpi-value num" id="ka-cohorts">1</div><div class="kpi-delta" style="color:var(--ink-500)">bundling opportunity</div></div>
+      </div>
+
+      <div style="margin-bottom:16px;padding:14px 16px;background:var(--ink-50);border-radius:10px;font-size:11px;color:var(--ink-500);font-family:var(--font-mono);line-height:1.6;">
+        Model: XGBoost-AFT survival on SAP PM work-orders + PI telemetry · health = Isolation Forest on windowed features · RUL shown as P10/P50/P90 · confidence drops to <b>LOW</b> when OEM discontinued or telemetry stale → falls back to Weibull-by-class baseline.
+      </div>
+
+      <div class="grid grid-23" style="align-items:flex-start;">
+        <div class="card">
+          <div class="card-head"><div><div class="card-title">Asset Health &amp; RUL</div><div class="card-subtitle">Click an asset for the forecast detail &amp; linked records</div></div>
+            <select id="asset-sort" onchange="renderAssetTable()" style="border:1px solid var(--ink-200);border-radius:6px;padding:5px 10px;font-size:12px;"><option value="health">Sort: worst health</option><option value="rul">Sort: shortest RUL</option><option value="age">Sort: oldest</option></select>
+          </div>
+          <table class="data-table"><thead><tr><th>Asset</th><th>Site</th><th>Criticality</th><th>Health</th><th class="num">Age</th><th class="num">RUL P50</th><th>Confidence</th></tr></thead><tbody id="asset-rows"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-head"><div><div class="card-title">Replacement Cohorts</div><div class="card-subtitle">Assets clustered for bundled replacement</div></div></div>
+          <div class="card-body" id="cohort-list"></div>
+        </div>
+      </div>
+      <div class="footer-note">Health &amp; RUL derived from asset age, OEM status, and linked material risk · cohorts cluster assets within ±18 months RUL at the same site for procurement &amp; mobilization savings</div>
+    </div>
+
     <!-- SCOPE EXPANSION (absorb into a program still in scoping) -->
     <div class="view" id="view-expansion">
       <div class="page-head">
@@ -691,11 +760,74 @@
   </div>
 </div>
 
+<div id="ai-host" onclick="if(event.target===this)closeAI()">
+  <div class="ai-box">
+    <div class="ai-input-row">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z"/></svg>
+      <input id="ai-input" placeholder="Ask Atlas… e.g. show me assets at risk" oninput="filterAI()" onkeydown="aiKey(event)">
+    </div>
+    <div class="ai-suggestions" id="ai-suggestions"></div>
+    <div class="ai-answer" id="ai-answer" style="display:none;"></div>
+  </div>
+</div>
+
+<div id="demo-coach">
+  <div class="demo-step-num" id="demo-stepnum">Step 1 of 6</div>
+  <div class="demo-title" id="demo-title"></div>
+  <div class="demo-body" id="demo-body"></div>
+  <div class="demo-controls">
+    <div class="demo-dots" id="demo-dots"></div>
+    <button class="demo-btn ghost" onclick="endDemo()">Exit</button>
+    <button class="demo-btn ghost" onclick="demoPrev()" id="demo-prev">Back</button>
+    <button class="demo-btn primary" onclick="demoNext()" id="demo-next">Next →</button>
+  </div>
+</div>
+
 <div id="toast-host"></div>
 <div id="modal-host" onclick="if(event.target===this)closeModal()"><div class="modal" id="modal"></div></div>
 
 <script>
+const assetData = [{"id":"EQP-CMP-0082","name":"Gas Compressor","site":"Hawiyah","crit":"Critical B","age":22,"life":25,"mfg":"Discontinued","health":15,"p10":3,"p50":5,"p90":8,"conf":"LOW","matRisk":5,"mats":4},{"id":"EQP-HX-0207","name":"Heat Exchanger","site":"Ras Tanura","crit":"Critical B","age":21,"life":28,"mfg":"Discontinued","health":19,"p10":9,"p50":16,"p90":27,"conf":"LOW","matRisk":7,"mats":4},{"id":"EQP-MTR-0420","name":"High Voltage Motor","site":"Manifa","crit":"Critical A","age":19,"life":25,"mfg":"Notice Received","health":30,"p10":12,"p50":22,"p90":37,"conf":"MEDIUM","matRisk":6,"mats":4},{"id":"EQP-PMP-0045","name":"Main Cooling Pump","site":"Yanbu","crit":"Critical A","age":14,"life":20,"mfg":"Notice Received","health":36,"p10":14,"p50":26,"p90":44,"conf":"MEDIUM","matRisk":5,"mats":4},{"id":"EQP-TRB-0114","name":"Steam Turbine","site":"Ras Tanura","crit":"Non-Critical","age":26,"life":30,"mfg":"Active","health":36,"p10":9,"p50":17,"p90":29,"conf":"MEDIUM","matRisk":6,"mats":4},{"id":"EQP-SWT-0172","name":"Switchgear Panel","site":"Khurais","crit":"Critical A","age":17,"life":30,"mfg":"Notice Received","health":40,"p10":34,"p50":62,"p90":105,"conf":"MEDIUM","matRisk":7,"mats":4},{"id":"EQP-PLC-0305","name":"Process Control PLC","site":"Berri","crit":"Non-Critical","age":12,"life":15,"mfg":"Active","health":40,"p10":8,"p50":14,"p90":24,"conf":"HIGH","matRisk":6,"mats":4},{"id":"EQP-VR-0021","name":"Voltage Regulator","site":"Khurais","crit":"Non-Critical","age":18,"life":25,"mfg":"Active","health":43,"p10":20,"p50":36,"p90":61,"conf":"HIGH","matRisk":7,"mats":4}];
+
 const procData = [{"rid":"R-001","eq":"EQP-VR-0021","eqd":"Voltage Regulator","age":18,"mat":"9CAT-100000","mtype":"9CAT","matd":"Mechanical Seal","crit":"Non-Critical","stock":0,"minStock":0,"stockStatus":"Out of Stock","sup":"SUP-2000","supStatus":"Active","lead":30,"perf":0.82,"perfAssess":"Acceptable","mfg":"Active","matStatus":"Active","action":NaN,"signal":"Stock risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":2,"prio":"Low"},{"rid":"R-002","eq":"EQP-PMP-0045","eqd":"Main Cooling Pump","age":14,"mat":"9CAT-100001","mtype":"9CAT","matd":"Control Relay 220V","crit":"Critical A","stock":3,"minStock":2,"stockStatus":"Available","sup":"SUP-2013","supStatus":"Inactive","lead":240,"perf":0.76,"perfAssess":"Acceptable","mfg":"Notice Received","matStatus":"Delinked","action":"Material maintenance request","signal":"Supplier / lead-time risk; Obsolescence risk; Material status risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":5,"prio":"Medium"},{"rid":"R-003","eq":"EQP-CMP-0082","eqd":"Gas Compressor","age":22,"mat":"9CAT-100002","mtype":"9CAT","matd":"Circuit Breaker 24kV","crit":"Critical B","stock":12,"minStock":4,"stockStatus":"Available","sup":"SUP-2026","supStatus":"Limited","lead":160,"perf":0.64,"perfAssess":"Acceptable","mfg":"Discontinued","matStatus":"Active","action":NaN,"signal":"Supplier / lead-time risk; Obsolescence risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":3,"prio":"Medium"},{"rid":"R-004","eq":"EQP-TRB-0114","eqd":"Steam Turbine","age":26,"mat":"9CAT-100003","mtype":"9CAT","matd":"Diaphragm Kit","crit":"Non-Critical","stock":1,"minStock":0,"stockStatus":"Available","sup":"SUP-2039","supStatus":"Active","lead":90,"perf":0.55,"perfAssess":"Acceptable","mfg":"Active","matStatus":"Deactivated","action":"Material maintenance request","signal":"Material status risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":2,"prio":"Low"},{"rid":"R-005","eq":"EQP-SWT-0172","eqd":"Switchgear Panel","age":17,"mat":"9CAT-100004","mtype":"9CAT","matd":"Bearing Assembly","crit":"Critical A","stock":5,"minStock":2,"stockStatus":"Available","sup":"SUP-2052","supStatus":"Inactive","lead":45,"perf":0.49,"perfAssess":"Cause for Exclusion","mfg":"Notice Received","matStatus":"Active","action":"Manufacturer notice attached","signal":"Supplier performance risk; Obsolescence risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":3,"prio":"Medium"},{"rid":"R-006","eq":"EQP-HX-0207","eqd":"Heat Exchanger","age":21,"mat":"9COM-700005","mtype":"9COM","matd":"Pressure Transmitter","crit":"Critical B","stock":20,"minStock":4,"stockStatus":"Available","sup":"SUP-2065","supStatus":"Limited","lead":300,"perf":0.42,"perfAssess":"Cause for Exclusion","mfg":"Discontinued","matStatus":"Active","action":"Direct non-cataloged request","signal":"Supplier / lead-time risk; Supplier performance risk; Obsolescence risk; Non-cataloged demand signal","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":7,"prio":"High"},{"rid":"R-007","eq":"EQP-PLC-0305","eqd":"Process Control PLC","age":12,"mat":"9CAT-100006","mtype":"9CAT","matd":"Control Valve Trim","crit":"Non-Critical","stock":2,"minStock":0,"stockStatus":"Available","sup":"SUP-2078","supStatus":"Active","lead":210,"perf":0.35,"perfAssess":"Cause for Exclusion","mfg":"Active","matStatus":"Delinked","action":"Material maintenance request","signal":"Supplier / lead-time risk; Supplier performance risk; Material status risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":6,"prio":"High"},{"rid":"R-008","eq":"EQP-MTR-0420","eqd":"High Voltage Motor","age":19,"mat":"9CAT-100007","mtype":"9CAT","matd":"Cooling Fan Blade","crit":"Critical A","stock":8,"minStock":2,"stockStatus":"Available","sup":"SUP-2011","supStatus":"Inactive","lead":120,"perf":0.91,"perfAssess":"Acceptable","mfg":"Notice Received","matStatus":"Active","action":"Manufacturer notice attached","signal":"Obsolescence risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":1,"prio":"Low"},{"rid":"R-009","eq":"EQP-VR-0021","eqd":"Voltage Regulator","age":18,"mat":"9CAT-100008","mtype":"9CAT","matd":"Gasket Set","crit":"Critical B","stock":0,"minStock":4,"stockStatus":"Out of Stock","sup":"SUP-2024","supStatus":"Limited","lead":75,"perf":0.68,"perfAssess":"Acceptable","mfg":"Discontinued","matStatus":"Deactivated","action":"Material maintenance request","signal":"Stock risk; Obsolescence risk; Material status risk","cpVisible":"Yes","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":6,"prio":"High"},{"rid":"R-010","eq":"EQP-PMP-0045","eqd":"Main Cooling Pump","age":14,"mat":"9CAT-100009","mtype":"9CAT","matd":"Lubrication Pump","crit":"Non-Critical","stock":3,"minStock":0,"stockStatus":"Available","sup":"SUP-2037","supStatus":"Active","lead":30,"perf":0.53,"perfAssess":"Acceptable","mfg":"Active","matStatus":"Active","action":NaN,"signal":NaN,"cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":0,"prio":"Low"},{"rid":"R-011","eq":"EQP-CMP-0082","eqd":"Gas Compressor","age":22,"mat":"9CAT-100010","mtype":"9CAT","matd":"Sensor Module","crit":"Critical A","stock":12,"minStock":2,"stockStatus":"Available","sup":"SUP-2050","supStatus":"Inactive","lead":240,"perf":0.47,"perfAssess":"Cause for Exclusion","mfg":"Notice Received","matStatus":"Active","action":"Manufacturer notice attached","signal":"Supplier / lead-time risk; Supplier performance risk; Obsolescence risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":5,"prio":"Medium"},{"rid":"R-012","eq":"EQP-TRB-0114","eqd":"Steam Turbine","age":26,"mat":"9CAT-100011","mtype":"9CAT","matd":"Power Supply Card","crit":"Critical B","stock":1,"minStock":4,"stockStatus":"Below Minimum","sup":"SUP-2063","supStatus":"Limited","lead":160,"perf":0.88,"perfAssess":"Acceptable","mfg":"Discontinued","matStatus":"Delinked","action":"Material maintenance request","signal":"Stock risk; Supplier / lead-time risk; Obsolescence risk; Material status risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":6,"prio":"High"},{"rid":"R-013","eq":"EQP-SWT-0172","eqd":"Switchgear Panel","age":17,"mat":"9COM-700012","mtype":"9COM","matd":"Actuator Assembly","crit":"Non-Critical","stock":5,"minStock":0,"stockStatus":"Available","sup":"SUP-2076","supStatus":"Active","lead":90,"perf":0.82,"perfAssess":"Acceptable","mfg":"Active","matStatus":"Active","action":"Direct non-cataloged request","signal":"Non-cataloged demand signal","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":1,"prio":"Low"},{"rid":"R-014","eq":"EQP-HX-0207","eqd":"Heat Exchanger","age":21,"mat":"9CAT-100013","mtype":"9CAT","matd":"Filter Element","crit":"Critical A","stock":20,"minStock":2,"stockStatus":"Available","sup":"SUP-2009","supStatus":"Inactive","lead":45,"perf":0.76,"perfAssess":"Acceptable","mfg":"Notice Received","matStatus":"Deactivated","action":"Material maintenance request","signal":"Obsolescence risk; Material status risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":3,"prio":"Medium"},{"rid":"R-015","eq":"EQP-PLC-0305","eqd":"Process Control PLC","age":12,"mat":"9CAT-100014","mtype":"9CAT","matd":"Coupling Set","crit":"Critical B","stock":2,"minStock":4,"stockStatus":"Below Minimum","sup":"SUP-2022","supStatus":"Limited","lead":300,"perf":0.64,"perfAssess":"Acceptable","mfg":"Discontinued","matStatus":"Active","action":NaN,"signal":"Stock risk; Supplier / lead-time risk; Obsolescence risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":5,"prio":"Medium"},{"rid":"R-016","eq":"EQP-MTR-0420","eqd":"High Voltage Motor","age":19,"mat":"9CAT-100015","mtype":"9CAT","matd":"Special Connector Assembly","crit":"Non-Critical","stock":8,"minStock":0,"stockStatus":"Available","sup":"SUP-2035","supStatus":"Active","lead":210,"perf":0.55,"perfAssess":"Acceptable","mfg":"Active","matStatus":"Active","action":NaN,"signal":"Supplier / lead-time risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":2,"prio":"Low"},{"rid":"R-017","eq":"EQP-VR-0021","eqd":"Voltage Regulator","age":18,"mat":"9CAT-100016","mtype":"9CAT","matd":"Seal Ring","crit":"Critical A","stock":0,"minStock":2,"stockStatus":"Out of Stock","sup":"SUP-2048","supStatus":"Inactive","lead":120,"perf":0.49,"perfAssess":"Cause for Exclusion","mfg":"Notice Received","matStatus":"Delinked","action":"Material maintenance request","signal":"Stock risk; Supplier performance risk; Obsolescence risk; Material status risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":7,"prio":"High"},{"rid":"R-018","eq":"EQP-PMP-0045","eqd":"Main Cooling Pump","age":14,"mat":"9CAT-100017","mtype":"9CAT","matd":"Temperature Probe","crit":"Critical B","stock":3,"minStock":4,"stockStatus":"Below Minimum","sup":"SUP-2061","supStatus":"Limited","lead":75,"perf":0.42,"perfAssess":"Cause for Exclusion","mfg":"Discontinued","matStatus":"Active","action":NaN,"signal":"Stock risk; Supplier performance risk; Obsolescence risk","cpVisible":"Yes","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":5,"prio":"Medium"},{"rid":"R-019","eq":"EQP-CMP-0082","eqd":"Gas Compressor","age":22,"mat":"9CAT-100018","mtype":"9CAT","matd":"Drive Board","crit":"Non-Critical","stock":12,"minStock":0,"stockStatus":"Available","sup":"SUP-2074","supStatus":"Active","lead":30,"perf":0.35,"perfAssess":"Cause for Exclusion","mfg":"Active","matStatus":"Deactivated","action":"Material maintenance request","signal":"Supplier performance risk; Material status risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":4,"prio":"Medium"},{"rid":"R-020","eq":"EQP-TRB-0114","eqd":"Steam Turbine","age":26,"mat":"9COM-700019","mtype":"9COM","matd":"Insulation Kit","crit":"Critical A","stock":1,"minStock":2,"stockStatus":"Below Minimum","sup":"SUP-2007","supStatus":"Inactive","lead":240,"perf":0.91,"perfAssess":"Acceptable","mfg":"Notice Received","matStatus":"Active","action":"Manufacturer notice attached","signal":"Stock risk; Supplier / lead-time risk; Obsolescence risk; Non-cataloged demand signal","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":5,"prio":"Medium"},{"rid":"R-021","eq":"EQP-SWT-0172","eqd":"Switchgear Panel","age":17,"mat":"9CAT-100020","mtype":"9CAT","matd":"Terminal Block","crit":"Critical B","stock":5,"minStock":4,"stockStatus":"Available","sup":"SUP-2020","supStatus":"Limited","lead":160,"perf":0.68,"perfAssess":"Acceptable","mfg":"Discontinued","matStatus":"Active","action":NaN,"signal":"Supplier / lead-time risk; Obsolescence risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":3,"prio":"Medium"},{"rid":"R-022","eq":"EQP-HX-0207","eqd":"Heat Exchanger","age":21,"mat":"9CAT-100021","mtype":"9CAT","matd":"Rotor Kit","crit":"Non-Critical","stock":20,"minStock":0,"stockStatus":"Available","sup":"SUP-2033","supStatus":"Active","lead":90,"perf":0.53,"perfAssess":"Acceptable","mfg":"Active","matStatus":"Delinked","action":"Material maintenance request","signal":"Material status risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":2,"prio":"Low"},{"rid":"R-023","eq":"EQP-PLC-0305","eqd":"Process Control PLC","age":12,"mat":"9CAT-100022","mtype":"9CAT","matd":"Hydraulic Hose","crit":"Critical A","stock":2,"minStock":2,"stockStatus":"Available","sup":"SUP-2046","supStatus":"Inactive","lead":45,"perf":0.47,"perfAssess":"Cause for Exclusion","mfg":"Notice Received","matStatus":"Active","action":"Manufacturer notice attached","signal":"Supplier performance risk; Obsolescence risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":3,"prio":"Medium"},{"rid":"R-024","eq":"EQP-MTR-0420","eqd":"High Voltage Motor","age":19,"mat":"9CAT-100023","mtype":"9CAT","matd":"Flow Meter Cartridge","crit":"Critical B","stock":8,"minStock":4,"stockStatus":"Available","sup":"SUP-2059","supStatus":"Limited","lead":300,"perf":0.88,"perfAssess":"Acceptable","mfg":"Discontinued","matStatus":"Deactivated","action":"Material maintenance request","signal":"Supplier / lead-time risk; Obsolescence risk; Material status risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":6,"prio":"High"},{"rid":"R-025","eq":"EQP-VR-0021","eqd":"Voltage Regulator","age":18,"mat":"9CAT-100024","mtype":"9CAT","matd":"Gearbox Bearing","crit":"Non-Critical","stock":0,"minStock":0,"stockStatus":"Out of Stock","sup":"SUP-2072","supStatus":"Active","lead":210,"perf":0.82,"perfAssess":"Acceptable","mfg":"Active","matStatus":"Active","action":NaN,"signal":"Stock risk; Supplier / lead-time risk","cpVisible":"Yes","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":4,"prio":"Medium"},{"rid":"R-026","eq":"EQP-PMP-0045","eqd":"Main Cooling Pump","age":14,"mat":"9CAT-100025","mtype":"9CAT","matd":"PLC Communication Card","crit":"Critical A","stock":3,"minStock":2,"stockStatus":"Available","sup":"SUP-2005","supStatus":"Inactive","lead":120,"perf":0.76,"perfAssess":"Acceptable","mfg":"Notice Received","matStatus":"Active","action":"Manufacturer notice attached","signal":"Obsolescence risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":1,"prio":"Low"},{"rid":"R-027","eq":"EQP-CMP-0082","eqd":"Gas Compressor","age":22,"mat":"9COM-700026","mtype":"9COM","matd":"Emergency Stop Module","crit":"Critical B","stock":12,"minStock":4,"stockStatus":"Available","sup":"SUP-2018","supStatus":"Limited","lead":75,"perf":0.64,"perfAssess":"Acceptable","mfg":"Discontinued","matStatus":"Delinked","action":"Material maintenance request","signal":"Obsolescence risk; Material status risk; Non-cataloged demand signal","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":5,"prio":"Medium"},{"rid":"R-028","eq":"EQP-TRB-0114","eqd":"Steam Turbine","age":26,"mat":"9CAT-100027","mtype":"9CAT","matd":"Valve Positioner","crit":"Non-Critical","stock":1,"minStock":0,"stockStatus":"Available","sup":"SUP-2031","supStatus":"Active","lead":30,"perf":0.55,"perfAssess":"Acceptable","mfg":"Active","matStatus":"Active","action":NaN,"signal":NaN,"cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":0,"prio":"Low"},{"rid":"R-029","eq":"EQP-SWT-0172","eqd":"Switchgear Panel","age":17,"mat":"9CAT-100028","mtype":"9CAT","matd":"Fuse Link","crit":"Critical A","stock":5,"minStock":2,"stockStatus":"Available","sup":"SUP-2044","supStatus":"Inactive","lead":240,"perf":0.49,"perfAssess":"Cause for Exclusion","mfg":"Notice Received","matStatus":"Deactivated","action":"Material maintenance request","signal":"Supplier / lead-time risk; Supplier performance risk; Obsolescence risk; Material status risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":7,"prio":"High"},{"rid":"R-030","eq":"EQP-HX-0207","eqd":"Heat Exchanger","age":21,"mat":"9CAT-100029","mtype":"9CAT","matd":"Impeller Set","crit":"Critical B","stock":20,"minStock":4,"stockStatus":"Available","sup":"SUP-2057","supStatus":"Limited","lead":160,"perf":0.42,"perfAssess":"Cause for Exclusion","mfg":"Discontinued","matStatus":"Active","action":NaN,"signal":"Supplier / lead-time risk; Supplier performance risk; Obsolescence risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":5,"prio":"Medium"},{"rid":"R-031","eq":"EQP-PLC-0305","eqd":"Process Control PLC","age":12,"mat":"9CAT-100030","mtype":"9CAT","matd":"OEM Repair Kit","crit":"Non-Critical","stock":2,"minStock":0,"stockStatus":"Available","sup":"SUP-2070","supStatus":"Active","lead":90,"perf":0.35,"perfAssess":"Cause for Exclusion","mfg":"Active","matStatus":"Active","action":NaN,"signal":"Supplier performance risk","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":2,"prio":"Low"},{"rid":"R-032","eq":"EQP-MTR-0420","eqd":"High Voltage Motor","age":19,"mat":"9COM-700031","mtype":"9COM","matd":"Special Bolt Kit","crit":"Critical A","stock":8,"minStock":2,"stockStatus":"Available","sup":"SUP-2003","supStatus":"Inactive","lead":45,"perf":0.91,"perfAssess":"Acceptable","mfg":"Notice Received","matStatus":"Delinked","action":"Material maintenance request","signal":"Obsolescence risk; Material status risk; Non-cataloged demand signal","cpVisible":"No","gap":"Risk is visible in operational/materials data but is not consistently elevated to capital planning.","score":4,"prio":"Medium"}];
+// ===================== SHARED APPLICATION STATE =====================
+const appState = {
+  valueCaptured: 0,           // $M captured this session
+  interventions: [],          // {type, label, value}
+  baseNPV: 68400,             // $M portfolio NPV baseline
+  candidates: 3847,           // candidate universe count
+  promotedSignals: 0,         // procurement signals promoted to planning
+  newCandidates: [],          // candidates created cross-module (from procurement/assets)
+  role: 'planner',
+};
+function captureValue(amount, type, label){
+  appState.valueCaptured += amount;
+  appState.interventions.push({type, label, value:amount, ts:new Date().toLocaleTimeString('en-GB').slice(0,8)});
+  animateTally();
+}
+function animateTally(){
+  const el=document.getElementById('tally-amount'); if(!el) return;
+  const target=appState.valueCaptured; let cur=parseFloat(el.dataset.cur||0);
+  const step=Math.max(1,(target-cur)/20);
+  const tick=()=>{ cur=Math.min(target,cur+step); el.textContent='$'+Math.round(cur)+'M'; el.dataset.cur=cur; if(cur<target) requestAnimationFrame(tick); };
+  tick();
+  const tally=document.getElementById('value-tally');
+  if(tally){ tally.style.transition='transform 200ms'; tally.style.transform='scale(1.08)'; setTimeout(()=>tally.style.transform='scale(1)',200); }
+}
+function addCandidate(c){ appState.newCandidates.push(c); appState.candidates++; }
+function showValueBreakdown(){
+  const items=appState.interventions;
+  openModal(`
+    <div class="modal-head"><div><div class="modal-title">Value captured this session</div><div class="modal-sub">$${appState.valueCaptured}M across ${items.length} intervention${items.length!==1?'s':''}</div></div><div class="modal-close" onclick="closeModal()">✕</div></div>
+    <div class="modal-body">
+      ${items.length===0?'<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:13px;">No interventions yet. Promote a procurement signal, consolidate a project, or expand a scope to capture value.</div>':
+      items.map(i=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--ink-100);"><div><div style="font-size:12px;font-weight:500;">${i.label}</div><div style="font-size:10px;color:var(--ink-500);font-family:var(--font-mono);">${i.type} · ${i.ts}</div></div><div class="num delta-good" style="font-weight:600;">+$${i.value}M</div></div>`).join('')}
+      ${items.length?`<div style="display:flex;justify-content:space-between;padding:14px 0 0;font-weight:600;"><span>Total avoided / unlocked</span><span class="num delta-good">+$${appState.valueCaptured}M</span></div>`:''}
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>
+  `);
+}
+
 // ===================== DATA =====================
 // Master capital programs the new request is checked against (budget/program overlap)
 const masterPrograms = [
@@ -801,16 +933,34 @@ function showView(name) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const el = document.querySelector(`.nav-item[data-nav="${name}"]`);
   if (el) el.classList.add('active');
-  const titles = { dashboard:['Home','Executive Dashboard'], planner:['Home','Planner Home'], optimizer:['Portfolio','Optimizer Run'], newrequest:['Home','New Capital Request'], expansion:['Home','Scope Expansion'], agents:['Agents','Review Queues'], database:['Data','Integrated Database'], portfolio:['Data','Portfolio'], procurement:['Data','Procurement Intelligence'], audit:['Governance','Audit Log'] };
+  const titles = { dashboard:['Home','Executive Dashboard'], planner:['Home','Planner Home'], optimizer:['Portfolio','Optimizer Run'], newrequest:['Home','New Capital Request'], assets:['Data','Predictive Asset Management'], expansion:['Home','Scope Expansion'], agents:['Agents','Review Queues'], database:['Data','Integrated Database'], portfolio:['Data','Portfolio'], procurement:['Data','Procurement Intelligence'], audit:['Governance','Audit Log'] };
   document.getElementById('crumb-1').textContent = titles[name][0];
   document.getElementById('crumb-2').textContent = titles[name][1];
   document.querySelector('.main').scrollTo(0,0);
 }
+const rolePerms = {
+  planner:   { label:'Planner', avatar:'AS', nav:['dashboard','planner','optimizer','newrequest','expansion','agents','database','procurement','portfolio','assets','audit'], note:'Full planning workspace · can run optimizer & build scenarios' },
+  cfo:       { label:'CFO', avatar:'FA', nav:['dashboard','optimizer','portfolio','procurement','audit'], note:'Executive view · approves portfolios · cannot edit asset master (SoD)' },
+  asset:     { label:'Asset Owner', avatar:'MN', nav:['dashboard','assets','procurement','agents','audit'], note:'Owns asset master & RUL validation · cannot run optimizer or approve capital' },
+  auditor:   { label:'Auditor', avatar:'KP', nav:['dashboard','audit','portfolio','procurement','assets'], note:'Read-only · cannot run optimizer, approve, or modify any record' },
+};
 function switchRole(role) {
-  const a = { cfo:'FA', planner:'AS', asset:'MN', auditor:'KP' };
-  document.getElementById('role-avatar').textContent = a[role];
-  const names = { cfo:'CFO', planner:'Planner', asset:'Asset Owner', auditor:'Auditor' };
-  toast('info', 'Switched to '+names[role]+' role', 'Navigation and permissions updated');
+  appState.role = role;
+  const p = rolePerms[role];
+  document.getElementById('role-avatar').textContent = p.avatar;
+  // show/hide nav items
+  document.querySelectorAll('.nav-item[data-nav]').forEach(n=>{
+    const v=n.getAttribute('data-nav');
+    n.style.display = p.nav.includes(v) ? '' : 'none';
+  });
+  // gate optimizer run + approvals for non-privileged roles
+  const canRun = (role==='planner');
+  const runBtn=document.getElementById('run-btn');
+  if(runBtn){ runBtn.style.opacity=canRun?1:0.4; runBtn.style.pointerEvents=canRun?'auto':'none'; runBtn.title=canRun?'':'Optimizer runs are restricted to Planner / Capital Planning Lead'; }
+  // if current view not allowed, bounce to dashboard
+  const active=document.querySelector('.view.active');
+  if(active){ const cur=active.id.replace('view-',''); if(!p.nav.includes(cur)) showView('dashboard'); }
+  toast('info', 'Now viewing as '+p.label, p.note);
 }
 
 // ===================== RENDER =====================
@@ -935,6 +1085,8 @@ function openProject(id) {
 function confirmMerge(pid, prog, saving) {
   closeModal();
   toast('success', 'Consolidated '+pid+' into '+prog, 'Captured +$'+saving+'M · optimizer re-scoped · audit event sealed');
+  captureValue(saving,'Consolidation',pid+' → '+prog);
+  bumpDashboardNPV(saving);
   // reflect in data
   const p = topProjects.find(x=>x.id===pid);
   if (p) { p.overlap = null; p.status = 'Merged'; }
@@ -999,7 +1151,9 @@ let isRunning = false;
 function selectObj(el) { document.querySelectorAll('.radio-opt').forEach(r=>r.classList.remove('selected')); el.classList.add('selected'); }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 async function runOptimizer() {
-  if (isRunning) return; isRunning = true;
+  if (isRunning) return;
+  if (appState.role!=='planner'){ toast('warn','Permission denied', rolePerms[appState.role].label+' role cannot run the optimizer · switch to Planner'); return; }
+  isRunning = true;
   const runBtn = document.getElementById('run-btn');
   runBtn.textContent='◼ Running…'; runBtn.classList.remove('pulse-glow'); runBtn.style.opacity=0.6; runBtn.style.pointerEvents='none';
   document.getElementById('opt-idle').style.display='none';
@@ -1151,7 +1305,11 @@ function promoteMaterial(rid){
   r.cpVisible='Yes';
   closeModal();
   renderProcKPIs(); renderProcTable();
-  toast('success','Promoted to capital planning', r.matd+' ('+r.eqd+') now an early replacement-project trigger · audit sealed');
+  const v=Math.round((r.score||1)*12);
+  toast('success','Promoted to capital planning', r.matd+' ('+r.eqd+') now an early replacement-project trigger · +$'+v+'M avoided · audit sealed');
+  captureValue(v,'Procurement signal',r.matd+' · '+r.eqd);
+  appState.promotedSignals++;
+  addCandidate({source:'procurement',name:'Early replacement · '+r.eqd,capex:v*4});
   auditEvents.unshift({ ts:'15:45:'+Math.floor(10+Math.random()*49), actor:'A. Altoraifi', action:'PROCUREMENT.PROMOTE_SIGNAL', target:r.mat+' · '+r.eqd+' → capital planning visibility', hash:Math.random().toString(16).slice(2,6)+'…'+Math.random().toString(16).slice(2,6) });
   renderAudit();
 }
@@ -1171,7 +1329,10 @@ function confirmPromoteAll(){
   procData.forEach(r=>r.cpVisible='Yes');
   closeModal();
   renderProcKPIs(); renderProcTable();
-  toast('success', n+' signals promoted to planning', 'Capital-planning gap closed · optimizer re-scoped · audit sealed');
+  const v=n*15;
+  toast('success', n+' signals promoted to planning', 'Gap closed · +$'+v+'M early-action value · optimizer re-scoped · audit sealed');
+  captureValue(v,'Procurement batch',n+' signals → planning');
+  appState.promotedSignals+=n;
   auditEvents.unshift({ ts:'15:46:02', actor:'A. Altoraifi', action:'PROCUREMENT.PROMOTE_BATCH', target:n+' invisible material signals → capital planning', hash:Math.random().toString(16).slice(2,6)+'…'+Math.random().toString(16).slice(2,6) });
   renderAudit();
 }
@@ -1281,12 +1442,18 @@ function finalizeRequest(mode, progId){
     standalone:[progId?'Standalone override submitted':'Standalone request submitted', progId?t+' submitted independently · sponsor of '+progId+' notified · override logged':t+' submitted · added to candidate pool']
   };
   toast(mode==='standalone'&&progId?'warn':'success', msgs[mode][0], msgs[mode][1]);
+  if(mode==='merge'){const cap=parseFloat(newRequest.capex)||0;const sv=Math.round(cap*0.18);if(sv){captureValue(sv,'Intake merge',(newRequest.title||'request')+' → '+progId);}}
   const action={merge:'REQUEST.MERGED',link:'REQUEST.LINKED',standalone:progId?'REQUEST.STANDALONE_OVERRIDE':'REQUEST.SUBMITTED'}[mode];
   auditEvents.unshift({ ts:'15:48:'+Math.floor(10+Math.random()*49), actor:'Dept Submitter', action:action, target:`"${t}"`+(progId?(mode==='merge'?' → '+progId:mode==='link'?' linked to '+progId:' (overlap '+progId+' overridden)'):''), hash:rndHash() });
   renderAudit();
   setTimeout(()=>{ resetRequest(); showView('audit'); }, 900);
 }
 function closeModalToExpansion(site){ const s=document.getElementById('ex-site'); if(s) s.value=site; showView('expansion'); toast('info','Switched to Scope Expansion','Site pre-filled — define the need to find expandable programs'); }
+function bumpDashboardNPV(saving){
+  appState.baseNPV += saving;
+  const el=document.querySelector('#view-dashboard .kpi-value.num');
+  if(el){ el.innerHTML='$'+(appState.baseNPV/1000).toFixed(1)+'<span class="unit">B</span>'; const k=el.closest('.kpi'); if(k){k.style.transition='background 300ms';k.style.background='var(--aramco-green-50)';setTimeout(()=>k.style.background='var(--white)',600);} }
+}
 function rndHash(){ return Math.random().toString(16).slice(2,6)+'…'+Math.random().toString(16).slice(2,6); }
 
 
@@ -1379,17 +1546,188 @@ function confirmExpand(progId, title, saving){
 function finalizeExpand(progId, title, saving){
   closeModal();
   toast('success','Folded into '+progId+' scope', '"'+title+'" added before FEED freeze · sponsor notified · +$'+saving+'M avoided · audit sealed');
+  captureValue(saving,'Scope expansion',title+' → '+progId);
   auditEvents.unshift({ ts:'15:50:'+Math.floor(10+Math.random()*49), actor:'Dept Submitter', action:'SCOPE.EXPANDED', target:`"${title}" → ${progId} (scoping-phase) · +$${saving}M avoided`, hash:rndHash() });
   renderAudit();
   setTimeout(()=>showView('audit'), 900);
 }
 
 
+
+// ===================== PREDICTIVE ASSET MANAGEMENT =====================
+function healthColor(h){ return h<25?'var(--error)':h<50?'var(--warn)':'var(--aramco-green)'; }
+function healthLabel(h){ return h<25?'Critical':h<50?'Degraded':h<75?'Fair':'Good'; }
+function confChip(c){ return c==='HIGH'?'chip-green':c==='MEDIUM'?'chip-warn':'chip-error'; }
+function critChip(c){ return /Critical A/i.test(c)?'chip-error':/Critical B/i.test(c)?'chip-warn':'chip-stale'; }
+function renderAssetKPIs(){
+  document.getElementById('ka-total').textContent=assetData.length;
+  document.getElementById('ka-critical').textContent=assetData.filter(a=>a.health<25).length;
+  document.getElementById('ka-rul').textContent=assetData.filter(a=>a.p50<12).length;
+  document.getElementById('ka-cohorts').textContent=buildCohorts().length;
+  const b=document.getElementById('assets-badge'); if(b) b.textContent=assetData.filter(a=>a.health<25).length;
+}
+function renderAssetTable(){
+  const sort=document.getElementById('asset-sort').value;
+  let rows=assetData.slice();
+  if(sort==='health') rows.sort((a,b)=>a.health-b.health);
+  else if(sort==='rul') rows.sort((a,b)=>a.p50-b.p50);
+  else rows.sort((a,b)=>b.age-a.age);
+  document.getElementById('asset-rows').innerHTML=rows.map(a=>`
+    <tr onclick="openAsset('${a.id}')">
+      <td><div style="font-weight:500;">${a.name}</div><div class="id mono">${a.id}</div></td>
+      <td>${a.site}</td>
+      <td><span class="chip ${critChip(a.crit)}">${a.crit}</span></td>
+      <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:54px;height:6px;background:var(--ink-100);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${a.health}%;background:${healthColor(a.health)};border-radius:3px;"></div></div><span class="mono" style="font-size:11px;font-weight:600;color:${healthColor(a.health)};">${a.health}</span></div></td>
+      <td class="num mono">${a.age}y</td>
+      <td class="num mono" style="${a.p50<12?'color:var(--error);font-weight:600;':''}">${a.p50}mo</td>
+      <td><span class="chip ${confChip(a.conf)}">${a.conf}</span></td>
+    </tr>`).join('');
+}
+function buildCohorts(){
+  // cluster by site where >=2 assets fall within an 18-month RUL band
+  const bySite={};
+  assetData.forEach(a=>{ (bySite[a.site]=bySite[a.site]||[]).push(a); });
+  const cohorts=[];
+  Object.entries(bySite).forEach(([site,list])=>{
+    if(list.length<2) return;
+    const sorted=list.slice().sort((a,b)=>a.p50-b.p50);
+    const band=sorted.filter(a=>a.p50<=sorted[0].p50+18);
+    if(band.length>=2) cohorts.push({site,assets:band});
+  });
+  return cohorts;
+}
+function renderCohorts(){
+  const cohorts=buildCohorts();
+  document.getElementById('cohort-list').innerHTML=cohorts.map((c,i)=>`
+    <div style="border:1px solid var(--ink-100);border-radius:10px;padding:14px;margin-bottom:${i<cohorts.length-1?'10px':'0'};">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="font-weight:600;font-size:13px;">${c.site} cluster</div><span class="chip chip-gold">${c.assets.length} assets</span></div>
+      ${c.assets.map(a=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;"><span>${a.name}</span><span class="mono" style="color:${healthColor(a.health)};">RUL ${a.p50}mo</span></div>`).join('')}
+      <div style="font-size:11px;color:var(--ink-500);margin-top:8px;line-height:1.4;">Bundle replacement → shared mobilization, procurement &amp; outage window.</div>
+    </div>`).join('') || '<div style="text-align:center;padding:30px;color:var(--ink-400);font-size:12px;">No multi-asset cohorts at current RUL bands.</div>';
+}
+function openAsset(id){
+  const a=assetData.find(x=>x.id===id);
+  // RUL band chart geometry
+  const maxMo=Math.max(a.p90,60);
+  const x=mo=>40+mo/maxMo*320;
+  openModal(`
+    <div class="modal-head"><div><div class="modal-title">${a.name}</div><div class="modal-sub">${a.id} · ${a.site} · ${a.crit} · OEM: ${a.mfg}</div></div><div class="modal-close" onclick="closeModal()">✕</div></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">
+        <div style="padding:12px;border:1px solid var(--ink-100);border-radius:8px;text-align:center;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-500);font-weight:600;">Health</div><div class="mono" style="font-size:22px;font-weight:600;margin-top:4px;color:${healthColor(a.health)};">${a.health}</div><div style="font-size:10px;color:var(--ink-500);">${healthLabel(a.health)}</div></div>
+        <div style="padding:12px;border:1px solid var(--ink-100);border-radius:8px;text-align:center;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-500);font-weight:600;">Age</div><div class="mono" style="font-size:22px;font-weight:600;margin-top:4px;">${a.age}y</div><div style="font-size:10px;color:var(--ink-500);">of ${a.life}y life</div></div>
+        <div style="padding:12px;border:1px solid var(--ink-100);border-radius:8px;text-align:center;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-500);font-weight:600;">RUL P50</div><div class="mono" style="font-size:22px;font-weight:600;margin-top:4px;${a.p50<12?'color:var(--error);':''}">${a.p50}</div><div style="font-size:10px;color:var(--ink-500);">months</div></div>
+        <div style="padding:12px;border:1px solid var(--ink-100);border-radius:8px;text-align:center;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-500);font-weight:600;">Confidence</div><div style="margin-top:8px;"><span class="chip ${confChip(a.conf)}">${a.conf}</span></div></div>
+      </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-500);font-weight:600;margin-bottom:8px;">RUL forecast distribution</div>
+      <svg viewBox="0 0 380 90" style="width:100%;height:90px;background:var(--ink-50);border-radius:8px;">
+        <line x1="40" y1="60" x2="370" y2="60" stroke="var(--ink-200)"/>
+        <line x1="${x(a.p10)}" y1="30" x2="${x(a.p90)}" y2="30" stroke="var(--aramco-green-200)" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="${x(a.p50)}" cy="30" r="6" fill="var(--aramco-green)" stroke="white" stroke-width="2"/>
+        <text x="${x(a.p10)}" y="20" font-size="9" fill="#5A6B63" text-anchor="middle">P10 ${a.p10}mo</text>
+        <text x="${x(a.p50)}" y="${a.p50<18?52:14}" font-size="10" fill="#006030" font-weight="600" text-anchor="middle">P50 ${a.p50}mo</text>
+        <text x="${x(a.p90)}" y="20" font-size="9" fill="#5A6B63" text-anchor="middle">P90 ${a.p90}mo</text>
+        <text x="40" y="75" font-size="9" fill="#5A6B63">now</text>
+        <text x="370" y="75" font-size="9" fill="#5A6B63" text-anchor="end">${maxMo}mo</text>
+      </svg>
+      ${a.conf==='LOW'?`<div style="margin-top:12px;padding:10px 12px;background:var(--error-bg);border-radius:8px;font-size:12px;color:var(--error);line-height:1.5;"><b>Reduced confidence.</b> OEM ${a.mfg.toLowerCase()} / asset beyond expected life — model fell back to Weibull-by-class baseline. SME review recommended before acting.</div>`:''}
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-500);font-weight:600;margin:16px 0 6px;">Linked records (integrated database)</div>
+      <div class="lineage"><span class="lineage-node">SAP PM · ${a.id}</span><span class="lineage-arrow">→</span><span class="lineage-node">${a.mats} linked materials</span><span class="lineage-arrow">→</span><span class="lineage-node ${a.matRisk>=6?'gold':''}">Max material risk ${a.matRisk}/7</span><span class="lineage-arrow">→</span><span class="lineage-node">Site ${a.site}</span></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Close</button><button class="btn btn-primary" onclick="createReplacement('${a.id}')">⚡ Create replacement project</button></div>
+  `);
+}
+function createReplacement(id){
+  const a=assetData.find(x=>x.id===id);
+  closeModal();
+  toast('success','Replacement project drafted', a.name+' ('+a.site+') → candidate created · RUL '+a.p50+'mo · routed to capital planning · audit sealed');
+  addCandidate({source:'asset',name:'Replacement · '+a.name,capex:200});
+  auditEvents.unshift({ ts:'15:51:'+Math.floor(10+Math.random()*49), actor:'M. Al-Nasser', action:'ASSET.REPLACEMENT_TRIGGER', target:a.name+' ('+a.id+') · RUL P50 '+a.p50+'mo → capital candidate', hash:rndHash() });
+  renderAudit();
+}
+function generateCohortProjects(){
+  const cohorts=buildCohorts();
+  const total=cohorts.reduce((s,c)=>s+c.assets.length,0);
+  openModal(`
+    <div class="modal-head"><div><div class="modal-title">Generate replacement projects</div><div class="modal-sub">${cohorts.length} cohorts · ${total} assets bundled for capital planning</div></div><div class="modal-close" onclick="closeModal()">✕</div></div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--ink-700);line-height:1.6;margin-bottom:14px;">Atlas will create bundled replacement candidates — one per site cohort — so the optimizer can schedule shared mobilization, procurement, and outage windows instead of replacing assets one by one.</div>
+      ${cohorts.map(c=>`<div style="padding:10px 12px;border:1px solid var(--ink-100);border-radius:8px;margin-bottom:8px;font-size:12px;"><div style="display:flex;justify-content:space-between;"><b>${c.site} replacement cohort</b><span class="chip chip-gold">${c.assets.length} assets</span></div><div style="color:var(--ink-500);margin-top:4px;">${c.assets.map(a=>a.name).join(', ')}</div></div>`).join('')}
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();const cv=${total}*22;toast('success','${cohorts.length} cohort projects created','Bundled candidates · +\$'+cv+'M shared-mobilization saving · audit sealed');captureValue(cv,'Asset cohort','${cohorts.length} bundled replacement cohorts');logCohort(${cohorts.length})">Create ${cohorts.length} cohort projects</button></div>
+  `);
+}
+function logCohort(n){ auditEvents.unshift({ ts:'15:52:02', actor:'M. Al-Nasser', action:'ASSET.COHORT_GENERATED', target:n+' bundled replacement cohorts → capital candidates', hash:rndHash() }); renderAudit(); }
+
+
+
+// ===================== AI ASSISTANT BAR =====================
+const aiCommands = [
+  { icon:'⚠', q:'show me assets at risk', sub:'Critical-health assets needing replacement', go:()=>{showView('assets');}, answer:()=>{const c=assetData.filter(a=>a.health<25);return `${c.length} assets in critical health: ${c.map(a=>a.name+' ('+a.health+')').join(', ')}. Opening Predictive Asset Management.`;} },
+  { icon:'◈', q:'what have we saved', sub:'Session value captured', go:()=>showValueBreakdown(), answer:()=>`This session you've captured <b>$${appState.valueCaptured}M</b> across ${appState.interventions.length} interventions.` },
+  { icon:'🔍', q:'check a new request for overlap', sub:'Pre-submission duplication check', go:()=>showView('newrequest'), answer:()=>'Opening New Capital Request — enter scope and Atlas checks it against funded programs.' },
+  { icon:'↔', q:'find expandable programs', sub:'Scoping-phase programs with open scope', go:()=>showView('expansion'), answer:()=>{const n=masterPrograms.filter(p=>p.phase==='Scoping').length;return `${n} programs are in scoping with open scope windows. Opening Scope Expansion.`;} },
+  { icon:'📊', q:'run the optimizer', sub:'Solve the portfolio MILP', go:()=>{showView('optimizer');setTimeout(runOptimizer,400);}, answer:()=>appState.role==='planner'?'Opening Optimizer and starting a run…':'Optimizer runs are restricted to the Planner role.' },
+  { icon:'🏭', q:'show procurement risk', sub:'Spare-parts signals invisible to planning', go:()=>showView('procurement'), answer:()=>{const inv=procData.filter(r=>r.cpVisible==='No').length;return `${inv} of ${procData.length} risk signals are still invisible to capital planning (${Math.round(inv/procData.length*100)}%). Opening Procurement Intelligence.`;} },
+  { icon:'📋', q:'show the audit trail', sub:'Immutable event log', go:()=>showView('audit'), answer:()=>`${auditEvents.length} events in the chain, all hash-verified. Opening Audit Log.` },
+  { icon:'💰', q:'how big is the portfolio', sub:'Current NPV & candidate count', go:()=>showView('dashboard'), answer:()=>`Portfolio NPV $${(appState.baseNPV/1000).toFixed(1)}B across ${appState.candidates.toLocaleString()} candidates.` },
+];
+let aiSel=0;
+function openAI(){ document.getElementById('ai-host').classList.add('open'); document.getElementById('ai-input').value=''; document.getElementById('ai-answer').style.display='none'; filterAI(); setTimeout(()=>document.getElementById('ai-input').focus(),50); }
+function closeAI(){ document.getElementById('ai-host').classList.remove('open'); }
+function filterAI(){
+  const q=(document.getElementById('ai-input').value||'').toLowerCase();
+  const matches=aiCommands.filter(c=>!q || c.q.includes(q) || c.sub.toLowerCase().includes(q) || q.split(' ').some(w=>w.length>2&&c.q.includes(w)));
+  aiSel=0;
+  document.getElementById('ai-suggestions').innerHTML=(matches.length?matches:aiCommands).map((c,i)=>`<div class="ai-sug ${i===0?'sel':''}" onclick="runAI(${aiCommands.indexOf(c)})"><div class="ai-sug-icon">${c.icon}</div><div><div>${c.q}</div><div class="ai-sug-sub">${c.sub}</div></div></div>`).join('');
+}
+function aiKey(e){
+  const sugs=[...document.querySelectorAll('.ai-sug')];
+  if(e.key==='ArrowDown'){ aiSel=Math.min(sugs.length-1,aiSel+1); sugs.forEach((s,i)=>s.classList.toggle('sel',i===aiSel)); e.preventDefault(); }
+  else if(e.key==='ArrowUp'){ aiSel=Math.max(0,aiSel-1); sugs.forEach((s,i)=>s.classList.toggle('sel',i===aiSel)); e.preventDefault(); }
+  else if(e.key==='Enter'){ const sel=sugs[aiSel]; if(sel) sel.click(); }
+  else if(e.key==='Escape') closeAI();
+}
+function runAI(idx){
+  const c=aiCommands[idx];
+  const ans=document.getElementById('ai-answer');
+  ans.style.display='block'; ans.innerHTML='<b>Atlas:</b> '+c.answer();
+  setTimeout(()=>{ closeAI(); c.go(); }, 900);
+}
+
+// ===================== GUIDED DEMO MODE =====================
+const demoSteps = [
+  { view:'dashboard', title:'The portfolio at a glance', body:'This is what leadership sees: $68B NPV, weighted IRR, capex committed, and cycle time down from 9 months to under 6. Everything below feeds this single picture.' },
+  { view:'database', title:'One integrated database', body:'The reason it works: seven source systems — SAP PM, MM, Primavera, Finance, PI, market data — federated into one model. Asset, material, supplier and project are linked, so nothing lives in a silo.' },
+  { view:'procurement', title:'Surfacing the hidden risk', body:'91% of operational risk signals never reach capital planning today. Here they are, live. Promote one and watch the value tally (top right) move — a failing spare becomes an early replacement project.' },
+  { view:'assets', title:'Predicting what to replace', body:'Health scores and RUL forecasts (P10/P50/P90) per asset, with confidence flags. Degraded assets cluster into replacement cohorts so we bundle procurement and outages instead of reacting.' },
+  { view:'expansion', title:'Stopping duplication before it starts', body:'Before launching a new program, Atlas checks whether one still in scoping can be widened to cover the need — cheaply, before its design freezes. A locked program won\'t match: you can\'t cheaply change committed scope.' },
+  { view:'optimizer', title:'The decision engine', body:'Finally, the MILP optimizer allocates the whole portfolio against budget, risk and strategic floors — three Pareto-optimal options in seconds. Every step you just saw is audit-logged. Press Run to see it solve.' },
+];
+let demoIdx=0;
+function startDemo(){ demoIdx=0; document.getElementById('demo-coach').classList.add('open'); renderDemo(); }
+function endDemo(){ document.getElementById('demo-coach').classList.remove('open'); }
+function renderDemo(){
+  const s=demoSteps[demoIdx];
+  showView(s.view);
+  document.getElementById('demo-stepnum').textContent='Step '+(demoIdx+1)+' of '+demoSteps.length;
+  document.getElementById('demo-title').textContent=s.title;
+  document.getElementById('demo-body').textContent=s.body;
+  document.getElementById('demo-dots').innerHTML=demoSteps.map((_,i)=>`<div class="demo-dot ${i===demoIdx?'on':''}"></div>`).join('');
+  document.getElementById('demo-prev').style.visibility=demoIdx===0?'hidden':'visible';
+  document.getElementById('demo-next').textContent=demoIdx===demoSteps.length-1?'Finish':'Next →';
+}
+function demoNext(){ if(demoIdx<demoSteps.length-1){ demoIdx++; renderDemo(); } else endDemo(); }
+function demoPrev(){ if(demoIdx>0){ demoIdx--; renderDemo(); } }
+
+
 // ===================== INIT =====================
 renderTopProjects(); renderPortfolio(); renderSources(); renderPending(); renderAgents(); renderAudit();
 renderProcKPIs(); renderProcTable(); renderHeatmap();
 renderScopingRows();
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+renderAssetKPIs(); renderAssetTable(); renderCohorts();
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){closeModal();closeAI();} if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openAI();} });
+switchRole('planner');
 </script>
 </body>
 </html>
